@@ -1,4 +1,4 @@
-# UNDER ACTIVE DEVELOPMENT, DO NOT USE
+# UNDER ACTIVE DEVELOPMENT, DO NOT USE, NOT ON PYPI
 
 # gateaux
 
@@ -27,11 +27,12 @@ interfaces to relational database object-relational mapper (RDBMS ORM) systems. 
 pair at a time.
 
 `gateaux` does not handle FoundationDB connections for you, just the data parsing
-part of your application. Effectively `gateaux` is just a fancy wrapper that sits on top
-of `fdb.tuple.pack` and `fdb.tuple.unpack` with some nice syntaxic sugar.
+part of your application. Effectively `gateaux` is just a data schema enforcing fancy
+wrapper that sits on top of `fdb.tuple.pack` and `fdb.tuple.unpack` with some nice
+syntaxic sugar.
 
 While there is overhead in checking data and converting it between types, `gateaux` is
-relatively performant.
+relatively performant as all it does is shuffle native Python data types about.
 
 
 ## Installation
@@ -114,12 +115,10 @@ event_log = EventLog(db)
 # And then use an event_log object like you would use the db object
 event_log[(datetime.now(), '127.0.0.1')] = (12345, EventLog.TYPE_UPLOAD)
 
-# Or, you can create the structure object without a connection for use in a transaction
-event_log = EventLog()
-
+# You can set the current transaction by setting the structure.transaction attribute
 @fdb.transactional
 def store_event(tr, ipv4, num_bytes, event_type):
-    event_log.connection = tr
+    event_log.transaction = tr
     event_log[(datetime.now(), ipv4)] = (num_bytes, event_type)
 
 store_event(db, '127.0.0.1', 12345, EventLog.TYPE_UPLOAD))
@@ -210,7 +209,7 @@ Stores bytes. Optional arguments:
 Accepted input type: `bytes`
 Output type: `bytes`
 
-### `IntegerField`
+### `IntegerField` (todo)
 
 Stores integers. Optional arguments:
 
@@ -220,7 +219,7 @@ Stores integers. Optional arguments:
 Accepted input type: `int`
 Output type: `int`
 
-### FloatField
+### FloatField (todo)
 
 Stores floats. Optional arguments:
 
@@ -230,7 +229,7 @@ Stores floats. Optional arguments:
 Accepted input types: `int`, `float`
 Output type: `float`
 
-### BooleanField
+### BooleanField (todo)
 
 Stores floats. Optional arguments:
 
@@ -240,7 +239,7 @@ Stores floats. Optional arguments:
 Accepted input types: `int`, `float`
 Output type: `float`
 
-### StringField
+### StringField (todo)
 
 Stores strings. Optional arguments:
 
@@ -249,7 +248,7 @@ Stores strings. Optional arguments:
 Accepted input type: `str`
 Output type: `str`
 
-### DateTimeField
+### DateTimeField (todo)
 
 Stores datetime instances. Internally stored as a UNIX timestamp and stored in UTC.
 Optional arguments:
@@ -260,35 +259,35 @@ Optional arguments:
 Accepted input types: `datetime.datetime`, `int`
 Output type: `datetime.datetime`
 
-### IPv4AddressField
+### IPv4AddressField (todo)
 
 Stores IPv4 addresses. Internally stored as 4 bytes.
 
 Accepted input types: `ipaddress.IPv4Address`, `str`
 Output type: `ipaddress.IPv4Address`
 
-### IPv4NetworkField
+### IPv4NetworkField (todo)
 
 Stores IPv4 networks. Internally stored as 5 bytes (address + prefix length).
 
 Accepted input types: `ipaddress.IPv4Network`, `str`
 Output type: `ipaddress.IPv4Network`
 
-### IPv6AddressField
+### IPv6AddressField (todo)
 
 Stores IPv6 addresses. Internally stored as 16 bytes.
 
 Accepted input types: `ipaddress.IPv6Address`, `str`
 Output type: `ipaddress.IPv6Address`
 
-### IPv6NetworkField
+### IPv6NetworkField (todo)
 
 Stores IPv4 networks. Internally stored as 17 bytes (address + prefix length).
 
 Accepted input types: `ipaddress.IPv6Network`, `str`
 Output type: `ipaddress.IPv6Network`
 
-### EnumField
+### EnumField (todo)
 
 Stores enums. Internally stored as an integer that maps to a specified value. Required
 arguments:
@@ -310,7 +309,7 @@ EnumField(members=MEMBERS)
 Accepted input type: `int` (must be an `int` specified in `members` tuple)
 Output type: `int`
 
-### UUIDField
+### UUIDField (todo)
 
 Stores UUID instances. Internally stored as 16 bytes.
 
