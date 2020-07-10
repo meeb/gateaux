@@ -3,40 +3,57 @@ import unittest
 import gateaux
 
 
-class MockFoundationConnection:
+class MockFoundationDBConnection:
     '''
-        Bare-bones emulation of a FoundationDB client connection.
+        A mock FoundationDB connection for testing. The only feature gateaux uses from
+        this is fdb.directory.create_or_open(...) so we can create a bare minimum
+        example for a mock testing interface.
     '''
 
-    def __init__(self):
+    def __init__(self) -> None:
+        class Directory:
+            def create_or_open(self, path:Tuple[str, ...]) -> MockFoundationDBDirectory:
+                return MockFoundationDBDirectory(path)
+        self.directory = Directory()
 
-        class MockTuple:
 
-            def pack(self, v:Tuple) -> bytes:
-                return b'mock'
+class MockFoundationDBDirectory:
+    '''
+        A mock FoundationDB directory layer instance which supports test data storage.
+    '''
 
-            def unpack(self, v:bytes) -> Tuple:
-                return (b'mock',)
-        
-        self.tuple = MockTuple()
+    def __init__(self, path:Tuple[str, ...]) -> None:
+        self.path:Tuple[str, ...] = path
+        self.data:dict = {}
 
-    def __getitem__(self, key:Tuple) -> Tuple:
-        print('[mock fdb get]', key)
-        return (b'mock',)
+    def __getitem__(self, key:bytes) -> bytes:
+        return self.data.get(key)
 
-    def __setitem__(self, key:Tuple, value:Tuple) -> bool:
-        print('[mock fdb set]', key, '=', value)
+    def __setitem__(self, key:bytes, value:bytes) -> bool:
+        self.data[key] = value
         return True
 
-    def __delitem__(self, key:Tuple) -> bool:
-        print('[mock fdb del]', key)
+    def __delitem__(self, key:bytes) -> bool:
+        del self.data[key]
         return True
+
+
+class MockConnectionTestCase(unittest.TestCase):
+
+    def test_mock_connection(self) -> None:
+        mock_connection = MockFoundationDBConnection()
+        mock_dir = mock_connection.directory.create_or_open(('test', 'path'))
+        self.assertEqual(mock_dir.path, ('test', 'path'))
+        mock_dir[b'test'] = b'test'
+        self.assertEqual(mock_dir[b'test'], b'test')
+        del mock_dir[b'test']
+        self.assertEqual(mock_dir[b'test'], None)
 
 
 class StructureTestCase(unittest.TestCase):
 
     def test_validation_directory(self) -> None:
-        mock_connection = MockFoundationConnection()
+        mock_connection = MockFoundationDBConnection()
         class InvalidDirectoryTestStructure(gateaux.Structure):
             directory = ('test', b'directory')
             key = (gateaux.BinaryField(),)
@@ -61,7 +78,7 @@ class StructureTestCase(unittest.TestCase):
         ValidDirectoryTestStructure(mock_connection)
 
     def test_validation_key(self) -> None:
-        mock_connection = MockFoundationConnection()
+        mock_connection = MockFoundationDBConnection()
         class InvalidKeyTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(), object())
@@ -86,7 +103,7 @@ class StructureTestCase(unittest.TestCase):
         ValidKeyTestStructure(mock_connection)
 
     def test_validation_value(self) -> None:
-        mock_connection = MockFoundationConnection()
+        mock_connection = MockFoundationDBConnection()
         class InvalidValueTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(),)
@@ -110,13 +127,10 @@ class StructureTestCase(unittest.TestCase):
             value = (gateaux.BinaryField(),)
         ValidValueTestStructure(mock_connection)
 
-    def test_bare_structure(self) -> None:
-
+    def test_interface(self) -> None:
+        mock_connection = MockFoundationDBConnection()
         class ValidTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(),)
             value = (gateaux.BinaryField(),)
-
-        mock_connection = MockFoundationConnection()
         test = ValidTestStructure(mock_connection)
-        self.assertEqual(test.connection, mock_connection)

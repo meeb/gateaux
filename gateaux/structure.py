@@ -9,48 +9,18 @@ class Structure:
     key: Tuple = ()
     value: Tuple = ()
 
-    def __init__(self, connection:Any=None) -> None:
-        if not connection:
-            raise GateauxStructureError('fdb connection must be the argument to a '
-                                        'structure')
-        self.connection = connection
-        self.transaction = None
-        self.fdb_pack = None
-        self.fdb_unpack = None
-        fdb_tuple = getattr(self.connection, 'tuple')
-        if fdb_tuple:
-            self.fdb_pack = getattr(fdb_tuple, 'pack', None)
-            self.fdb_unpack = getattr(fdb_tuple, 'unpack', None)
-        if not self.fdb_pack or not self.fdb_unpack:
-            raise GateauxStructureError('connection has no .tuple.pack or '
-                                        '.tuple.unpack methods, is it a fdb '
-                                        'connection?')
+    def __init__(self, connection:Any) -> None:
+        self.connection:Any = connection
         self.validate()
-
-    def __getitem__(self, key:Tuple[Any]) -> Tuple:
-        print('getitem', key)
-        return ()
-
-    def __setitem__(self, key:Tuple[Any], value:Tuple[Any]) -> bool:
-        print('setitem', key, value)
-        return True
-
-    def __delitem__(self, key:Tuple[Any]) -> bool:
-        print('del', key)
-        return True
+        self.fdbdir:Any = self.connection.directory.create_or_open(self.directory)
 
     def validate(self) -> bool:
         '''
             Performs self-validation on a Structure such as validating required
-            attributes are set and fields combinations are possible.
-
-            self.directory must be a tuple of strings
-            self.key must be a tuple of gateaux Fields
-            self.value must be a tuple of gateaux Fields
-
-            Fields can be optional, but optional fields must be at the end of the tuple:
-            key = (Field(), Field(), Field(optional=True)) is fine, but
-            key = (Field(), Field(optional=True), Field()) is not
+            attributes are set:
+                * self.directory must be a tuple of strings
+                * self.key must be a tuple of gateaux Fields
+                * self.value must be a tuple of gateaux Fields
         '''
         me = self.__class__.__name__
         # Validate the directory attribute
@@ -67,36 +37,39 @@ class Structure:
             raise GateauxStructureError(f'{me}.key must be a tuple')
         if not self.key:
             raise GateauxStructureError(f'{me}.key must not be empty')
-        found_optional = False
         for i, field in enumerate(self.key):
             if not isinstance(field, BaseField):
                 err = f'{me}.key[{i}] is not a field, got: {type(field)}'
                 raise GateauxStructureError(err)
-            if field.optional:
-                found_optional = True
-            else:
-                if found_optional:
-                    err = (f'{me}.key[{i}] is has optional=False, but follows an '
-                            'optional field (optional fields can only go at the end '
-                            'of the tuple)')
-                    raise GateauxStructureError(err)
         # Check the value is valid
         if not isinstance(self.value, tuple):
             raise GateauxStructureError(f'{me}.value must be a tuple')
         if not self.value:
             raise GateauxStructureError(f'{me}.value must not be empty')
-        found_optional = False
         for i, field in enumerate(self.value):
             if not isinstance(field, BaseField):
                 err = f'{me}.value[{i}] is not a field, got: {type(field)}'
                 raise GateauxStructureError(err)
-            if field.optional:
-                found_optional = True
-            else:
-                if found_optional:
-                    err = (f'{me}.value[{i}] is has optional=False, but follows an '
-                            'optional field (optional fields can only go at the end '
-                            'of the tuple)')
-                    raise GateauxStructureError(err)
         # If we reach here, all looks good
         return True
+
+    def describe(self) -> dict:
+        return {}
+
+    def _pack(self, tr:Any, data_tuple: Tuple) -> bytes:
+        return b''
+
+    def _unpack(self, tr:Any, bytes: bytes) -> Tuple:
+        return ()
+
+    def pack_key(self, tr:Any, key_tuple: Tuple) -> bytes:
+        return b''
+
+    def pack_value(self, tr:Any, value_tuple: Tuple) -> bytes:
+        return b''
+
+    def unpack_key(self, tr:Any, key_bytes: bytes) -> Tuple:
+        return ()
+
+    def unpack_value(self, tr:Any, value_bytes: bytes) -> Tuple:
+        return ()

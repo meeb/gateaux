@@ -10,26 +10,23 @@ store and employs ACID transactions for all operations." - taken from
 https://github.com/apple/foundationdb/
 
 FoundationDB has, by design, a bare minimum of features. It presents an interface to
-applications which reads and writes binary data. The only structure it provides
-natively is `pack()` and `unpack()` which convert tuples of data into binary, and binary
-back out into tuples of data. The tuples themselves can contain strings, integers,
-floats and bytes.
+applications which reads and writes binary data with a few basic helper layers. 
 
 It has no support for rich data types (for example `datetime` objects) nor provides any
-data validation. FoundationDB is designed to have layers of abstraction built on top of
-it to provide additional features.
+extended data validation. FoundationDB is designed to have layers of abstraction built
+on top of it to provide additional features.
 
-`gateaux` is a pure Python 3 (>=3.6) library which provides automatic rich data type
-handling and validation. Logically, it sits somewhere between bare FoundationDB and full
-layer implemenations for more complex applications. It is loosely modled from the
-interfaces to relational database object-relational mapper (RDBMS ORM) systems. Each
-`gateaux` structure (comparable to a "model") effectively formats one single key/value
-pair at a time.
+`gateaux` is a pure Python 3 (>=3.6) library which provides rich data type handling and
+validation on top of the usual `pack()` and `unpack()` methods and extends the
+`fdb.tuple` built-in layer. It is loosely modled from the interfaces to relational
+database object-relational mapper (RDBMS ORM) systems. Each `gateaux` structure
+(comparable to a "model" in the ORM world) effectively formats one single key/value pair
+at a time with more rigid validation than the `fdb` library provides out of the box.
 
 `gateaux` does not handle FoundationDB connections for you, just the data parsing
 part of your application. Effectively `gateaux` is just a data schema enforcing fancy
-wrapper that sits on top of `fdb.tuple.pack` and `fdb.tuple.unpack` with some nice
-syntaxic sugar.
+wrapper that sits on top of tuple packing and unpacking with some nice syntaxic sugar.
+`gateaux` does not abstract away any of the useful existing keyspace interface.
 
 While there is overhead in checking data and converting it between types, `gateaux` is
 relatively performant as all it does is shuffle native Python data types about.
@@ -37,7 +34,8 @@ relatively performant as all it does is shuffle native Python data types about.
 
 ## Installation
 
-First, you need to install the FoundationDB client from:
+`gateaux` itself has no dependancies, it is pure standard Python compatible. However, to
+be useful you first need to install the FoundationDB client from:
 
 https://www.foundationdb.org/download
 
@@ -71,10 +69,11 @@ db = fdb.open()
 # Define a data structure, an example event log in this case
 class EventLog(gateaux.Structure):
 
-    # Every data structure needs a directory as a tuple, this is a FoundationDB dir
+    # Every data structure needs a directory as a tuple, this is a FoundationDB
+    # directory layer path
     directory = ('log', 'events')
 
-    # Enum members
+    # Enum members used in the value[1] field
     TYPE_UPLOAD = 0
     TYPE_DOWNLOAD = 1
     TYPE_MEMBERS = (
@@ -109,43 +108,116 @@ class EventLog(gateaux.Structure):
     )
 
 
-# You can use structure directly with the FoundationDB connection
+# All actions need to be in a transaction, first create an instance of our structure.
+# The FoundationDB connection passed here is used solely to open the specified
+# FoundationDB directory
 event_log = EventLog(db)
 
-# And then use an event_log object like you would use the db object
-event_log[(datetime.now(), '127.0.0.1')] = (12345, EventLog.TYPE_UPLOAD)
 
-# You can set the current transaction by setting the structure.transaction attribute
+# Use the structure
 @fdb.transactional
 def store_event(tr, ipv4, num_bytes, event_type):
-    event_log.transaction = tr
-    event_log[(datetime.now(), ipv4)] = (num_bytes, event_type)
+    key = event_log.pack_key(tr, (datetime.now(), ipv4))
+    value = event_log.pack_value(tr, (num_bytes, event_type))
+    tr[key] = value
 
 store_event(db, '127.0.0.1', 12345, EventLog.TYPE_UPLOAD))
 
-# You can fetch values by key
-dt = datetime(year=2020, month=7, day=1)
-(num_bytes, event_type) = event_log[(dt, '127.0.0.1')]
 
-# And get ranges between keys
-from_key = (dt, '127.0.0.1')
-to_key = (dt + timedelta(days=1), 127.0.0.1')
-for (dt, ipv4), (num_bytes, event_type) in event_log[from_key:to_key]:
-    print((dt, ipv4), ' = ', (num_bytes, event_type))
+# All available methods at once
+@fdb.transactional
+def complete_example(tr):
+    key_tuple = (datetime.now(), '127.0.0.1')
+    value_tuple = (12345, EventLog.TYPE_UPLOAD)
+    # Packing
+    packed_key = event_log.pack_key(tr, key_tuple)
+    packed_value = event_log.pack_value(tr, value_tuple)
+    # Unpacking
+    unpacked_key = event_log.unpack_key(tr, packed_key)
+    unpacked_value = event_log.unpack_value(tr, packed_value)
+    # After packing and unpacking they are the same
+    assert(key_tuple == unpacked_key)
+    assert(value_tuple == unpacked_value)
 
-# And delete keys
-del event_log[(dt, '127.0.0.1')]
+complete_example(db)
 
-# And delete ranges
-del event_log[from_key:to_key]
 
-# If you attempt to pass in any invalid data, such as a string into an IntegerField,
-# a gateaux.errors.GateauxValidationError exception will be raised
-try:
-    event_log[(datetime.now(), '127.0.0.1')] = ('not an integer', EventLog.TYPE_UPLOAD)
-except gateaux.errors.GateauxValidationError as e:
-    print('validation error:', e)
+# Exception handling
+@fdb.transactional
+def complete_example(tr):
+    try:
+        # Attempting to put a string into a DateTime field
+        key_tuple = ('wrong type', '127.0.0.1')
+    except gateaux.errors.GateauxValidationError as e:
+        # ... handle the error
+        print('validation error', e)
+
 ```
+
+## Example 2
+
+The FoundationDB example here:
+https://apple.github.io/foundationdb/data-modeling.html#data-modeling-tuples
+Converted into using `gateaux` structures:
+
+```python
+class TemperatureReading(gateaux.Structure):
+
+    directory = ('readings', 'temperatures')
+
+    key = (
+        gateaux.IntegerField(
+            name='year',
+        ),
+        gateaux.IntegerField(
+            name='day',
+        )
+    )
+
+    value = (
+        gateaux.IntegerField(
+            name='degrees',
+        )
+    )
+
+
+temp_reading = TemperatureReading(db)
+
+
+@fdb.transactional
+def set_temp(tr, year, day, degrees):
+    key = temp_reading.pack_key((year, day))
+    value = temp_reading.pack_value((degrees,))
+    tr[key] = value
+
+@fdb.transactional
+def get_temp(tr, year, day):
+    key = temp_reading.pack_key((year, day))
+    return tr[key]
+```
+
+
+## Enforced data format
+
+`gateaux` enforces certain requirements. These are not suitable for every project so
+check carefully and verify the libray is appropriate for your application before you
+use it:
+
+1. All structures are in their own FoundationDB directory using the directory layer
+2. Key tuple members are varialble, a key of 3 elements can contain 1, 2 or 3 values
+3. Value tuple members are fixed, a value of 3 elements must always contain 3 values
+3. Validation is strict, if you define a field as a StringField you cannot store bytes
+   in it etc. Types must match
+4. All calls to `gateaux` methods are expected to be made within a FoundationDB
+   transaciton, with the transaction as the first argument
+5. While possible to support multiple data types, such as cast int(1) to str('1') if an
+   integer is provided to a StringField, by choice typing is enforced and this will
+   raise an exception
+6. You should not use direct binary data with FoundationDB while using `gateaux`, always
+   use tuples of other types
+
+`gateaux` conforms to the same idea of `fdb.tuple` such that packing then unpacking a
+tuple should always result in the same original tuple of data.
 
 
 ## Structures
@@ -154,7 +226,11 @@ There is only one base structure which is inherited to create your own structure
 Synopsis:
 
 ```python
+import fdb
 import gateaux
+
+fdb.api_version(510)
+db = fdb.open()
 
 class SomeUserStructure(gateaux.Structure):
     directory = ('some', 'directory')
@@ -164,22 +240,31 @@ class SomeUserStructure(gateaux.Structure):
     value = (
         gateaux.BinaryField(),
     )
+
+some_structure_instance = SomeUserStructure(db)
 ```
 
-Structures support the following argument:
+Structures have one required argument, the FoundationDB connection. Structure instances
+have the following interface:
 
-* `connection=[foundation db connection]` If set, the FoundationDB connection to use.
+* `structure.pack_key(tr, (...))` validates a tuple of data against the defined key
+  fields and returns bytes. The bytes are a FoundationDB packed tuple in the defined
+  directory.
+* `structure.unpack_key(tr, b'...')` unpacks FoundationDB bytes into a tuple and then
+  validates the data against the defined key fields returning the appropriate data type
+  for the field.
+* `structure.pack_value(tr, (...))` validates a tuple of data against the defined value
+  fields and returns bytes. The bytes are a FoundationDB packed tuple in the defined
+  directory.
+* `structure.unpack_value(tr, b'...')` unpacks FoundationDB bytes into a tuple and then
+  validates the data against the defined value fields returning the appropriate data
+  type for the field.
+* `structure.describe()` returns a `dict` describing the model, including any `name` or
+  `help` data set on each field. You can use this to programatically inspect a structure
+  in the future and is useful if you have many structures.
 
-You can override the attribute when using `@fdb.transactional` wrapped functions which
-allows you to only initialise the structures once then re-use them.
-
-```python
-some_data = SomeUserStructure()
-
-@fdb.transactional
-def some_function(tr, args):
-    some_data.connection = tr
-```
+All packing and unpacking methods require a FoundationDB transaction as the first
+argument.
 
 
 ## Fields
@@ -191,14 +276,14 @@ All fields support the following arguments:
 * `help_text=string` If set, help defines some optional help text to describe the data
    stored in the value.
 
-* `optional=boolean` If set to True then the field can have a `None` value. Defaults to
-   False. Optional fields must be at the end of the tuple. For example:
-   `key = (Field(), Field(), Field(optional=True))` is allowed, but
-   `key = (Field(), Field(optional=True), Field())` is not. The optional field in the
-   middle of the key or value tuple is not permitted.
+* `null=boolean` If set to True then the field can have a `None` value. Defaults to
+   False.
 
 * `default=value` If set, defines a default for a value. The type must match the
   required type for the field.
+
+Other field types may support more arguments.
+
 
 ### `BinaryField`
 
@@ -208,6 +293,7 @@ Stores bytes. Optional arguments:
 
 Accepted input type: `bytes`
 Output type: `bytes`
+
 
 ### `IntegerField` (todo)
 
@@ -219,6 +305,7 @@ Stores integers. Optional arguments:
 Accepted input type: `int`
 Output type: `int`
 
+
 ### FloatField (todo)
 
 Stores floats. Optional arguments:
@@ -228,6 +315,7 @@ Stores floats. Optional arguments:
 
 Accepted input types: `int`, `float`
 Output type: `float`
+
 
 ### BooleanField (todo)
 
@@ -239,6 +327,7 @@ Stores floats. Optional arguments:
 Accepted input types: `int`, `float`
 Output type: `float`
 
+
 ### StringField (todo)
 
 Stores strings. Optional arguments:
@@ -247,6 +336,7 @@ Stores strings. Optional arguments:
 
 Accepted input type: `str`
 Output type: `str`
+
 
 ### DateTimeField (todo)
 
@@ -259,12 +349,14 @@ Optional arguments:
 Accepted input types: `datetime.datetime`, `int`
 Output type: `datetime.datetime`
 
+
 ### IPv4AddressField (todo)
 
 Stores IPv4 addresses. Internally stored as 4 bytes.
 
 Accepted input types: `ipaddress.IPv4Address`, `str`
 Output type: `ipaddress.IPv4Address`
+
 
 ### IPv4NetworkField (todo)
 
@@ -273,6 +365,7 @@ Stores IPv4 networks. Internally stored as 5 bytes (address + prefix length).
 Accepted input types: `ipaddress.IPv4Network`, `str`
 Output type: `ipaddress.IPv4Network`
 
+
 ### IPv6AddressField (todo)
 
 Stores IPv6 addresses. Internally stored as 16 bytes.
@@ -280,12 +373,14 @@ Stores IPv6 addresses. Internally stored as 16 bytes.
 Accepted input types: `ipaddress.IPv6Address`, `str`
 Output type: `ipaddress.IPv6Address`
 
+
 ### IPv6NetworkField (todo)
 
 Stores IPv4 networks. Internally stored as 17 bytes (address + prefix length).
 
 Accepted input types: `ipaddress.IPv6Network`, `str`
 Output type: `ipaddress.IPv6Network`
+
 
 ### EnumField (todo)
 
@@ -309,6 +404,7 @@ EnumField(members=MEMBERS)
 Accepted input type: `int` (must be an `int` specified in `members` tuple)
 Output type: `int`
 
+
 ### UUIDField (todo)
 
 Stores UUID instances. Internally stored as 16 bytes.
@@ -319,7 +415,9 @@ Output type: `uuid.UUID`
 
 ## Tests
 
-There is a test suite, you can run it by cloing this repository then execuiting:
+There is a pretty comprehensive test suite. As `gateaux` is designed to pack and unpack
+important data it has good coverage to make sure it's behaving as expected. You can run
+it by cloing this repository then execuiting:
 
 ```bash
 $ ./run-tests.sh

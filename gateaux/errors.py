@@ -11,13 +11,3 @@ class GateauxStructureError(GateauxError):
 class GateauxValidationError(GateauxError):
 
     pass
-
-
-class GateauxPackError(GateauxError):
-
-    pass
-
-
-class GateaxUnpackError(GateauxError):
-
-    pass

@@ -23,8 +23,9 @@ class TypingTestCase(unittest.TestCase):
             on them.
         '''
         for test_file in glob.iglob(f'{os.getcwd()}/tests/**/*.py', recursive=True):
-            print(f'type checking: {os.path.basename(test_file)}')
+            print(f'type checking: {os.path.basename(test_file)} ... ', end='')
             self._run_mypy(test_file)
+            print('ok')
 
     def test_typing(self) -> None:
         '''

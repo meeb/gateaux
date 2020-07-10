@@ -1,10 +1,13 @@
-from typing import Any
+from typing import Any, Tuple
 
 
 class BaseField:
     '''
         Describes a basic interface that fields must implement.
     '''
+
+    # The data type which is accepted as an input and returned as an output
+    data_type: Any = object
 
     def __init__(self, **kwargs) -> None:
         if 'name' in kwargs:
@@ -21,22 +24,23 @@ class BaseField:
             del kwargs['help_text']
         else:
             self.help_text = ''
-        if 'optional' in kwargs:
-            self.optional = kwargs['optional']
-            if not isinstance(self.optional, bool):
-                raise TypeError('"optional" must be a bool')
-            del kwargs['optional']
+        if 'null' in kwargs:
+            self.null = kwargs['null']
+            if not isinstance(self.null, bool):
+                raise TypeError('"null" must be a bool')
+            del kwargs['null']
         else:
-            self.optional = False
+            self.null = False
+        if 'default' in kwargs:
+            self.default = kwargs['default']
+            if not isinstance(self.default, self.data_type):
+                raise TypeError('"default" must be a {type(self.data_type)}')
+            del kwargs['default']
+        else:
+            self.default = None
         if kwargs:
             err = 'Unexpected keyword arguments passed to field: {}'
             raise ValueError(err.format(kwargs.keys()))
-
-    def validate(self, v:Any) -> bool:
-        '''
-            If implemented, validate() performs prepacking validation on the value.
-        '''
-        raise NotImplementedError('validate() must be implemented if called')
 
     def pack(self, v:Any):
         '''

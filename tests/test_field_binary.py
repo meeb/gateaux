@@ -8,7 +8,8 @@ class BinaryFieldTestCase(unittest.TestCase):
         field = gateaux.BinaryField()
         self.assertEqual(field.name, '')
         self.assertEqual(field.help_text, '')
-        self.assertEqual(field.optional, False)
+        self.assertEqual(field.null, False)
+        self.assertEqual(field.default, None)
         self.assertEqual(field.max_length, 0)
         field = gateaux.BinaryField(max_length=12345)
         self.assertEqual(field.max_length, 12345)
@@ -22,8 +23,12 @@ class BinaryFieldTestCase(unittest.TestCase):
 
     def test_pack(self) -> None:
         field = gateaux.BinaryField()
+        with self.assertRaises(gateaux.errors.GateauxValidationError):
+            field.pack('not bytes') # type: ignore
         self.assertEqual(field.pack(b'test'), b'test')
 
     def test_unpack(self) -> None:
         field = gateaux.BinaryField()
+        with self.assertRaises(gateaux.errors.GateauxValidationError):
+            field.unpack('not bytes') # type: ignore
         self.assertEqual(field.unpack(b'test'), b'test')
