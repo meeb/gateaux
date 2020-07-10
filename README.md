@@ -279,7 +279,7 @@ All fields support the following arguments:
 * `null=boolean` If set to True then the field can have a `None` value. Defaults to
    False.
 
-* `default=value` If set, defines a default for a value. The type must match the
+* `default=value` If set, defines a default for a field. The type must match the
   required type for the field.
 
 Other field types may support more arguments.
@@ -289,97 +289,80 @@ Other field types may support more arguments.
 
 Stores bytes. Optional arguments:
 
-* `max_length=Integer` If set defines the maximum number of bytes the field will store.
+* `max_length=int` If set defines the maximum number of bytes the field will store.
 
-Accepted input type: `bytes`
-Output type: `bytes`
+Accepted type: `bytes`
 
 
 ### `IntegerField` (todo)
 
 Stores integers. Optional arguments:
 
-* `min=Integer` If set defines the minimum number the value will accept
-* `max=Integer` If set defines the maximum number the value will accept
+* `min_value=int` If set defines the minimum number the field will accept
+* `max_value=int` If set defines the maximum number the field will accept
 
-Accepted input type: `int`
-Output type: `int`
+Accepted type: `int`
 
 
 ### FloatField (todo)
 
 Stores floats. Optional arguments:
 
-* `min=Integer` If set defines the minimum number the value will accept
-* `max=Integer` If set defines the maximum number the value will accept
+* `min_value=float` If set defines the minimum number the field will accept
+* `max_value=float` If set defines the maximum number the field will accept
 
-Accepted input types: `int`, `float`
-Output type: `float`
+Accepted type: `float`
 
 
 ### BooleanField (todo)
 
-Stores floats. Optional arguments:
+Stores booleans.
 
-* `min=Integer` If set defines the minimum number the value will accept
-* `max=Integer` If set defines the maximum number the value will accept
-
-Accepted input types: `int`, `float`
-Output type: `float`
+Accepted types: `bool`
 
 
 ### StringField (todo)
 
 Stores strings. Optional arguments:
 
-* `max_length=Integer` If set defines the maximum length of strings to store
+* `max_length=int` If set defines the maximum length of the field will accept
 
-Accepted input type: `str`
-Output type: `str`
+Accepted type: `str`
 
 
 ### DateTimeField (todo)
 
 Stores datetime instances. Internally stored as a UNIX timestamp and stored in UTC.
-Optional arguments:
 
-* `timezone=timezone` If set, defines the `pytz` timezone such as `pytz.UTC` which the
-  datetime will be converted to when read.
-
-Accepted input types: `datetime.datetime`, `int`
-Output type: `datetime.datetime`
+Accepted type: `datetime.datetime`
 
 
 ### IPv4AddressField (todo)
 
 Stores IPv4 addresses. Internally stored as 4 bytes.
 
-Accepted input types: `ipaddress.IPv4Address`, `str`
-Output type: `ipaddress.IPv4Address`
+Accepted types: `ipaddress.IPv4Address`
 
 
 ### IPv4NetworkField (todo)
 
 Stores IPv4 networks. Internally stored as 5 bytes (address + prefix length).
 
-Accepted input types: `ipaddress.IPv4Network`, `str`
-Output type: `ipaddress.IPv4Network`
+Accepted types: `ipaddress.IPv4Network`
 
 
 ### IPv6AddressField (todo)
 
 Stores IPv6 addresses. Internally stored as 16 bytes.
 
-Accepted input types: `ipaddress.IPv6Address`, `str`
-Output type: `ipaddress.IPv6Address`
+Accepted types: `ipaddress.IPv6Address`
 
 
 ### IPv6NetworkField (todo)
 
 Stores IPv4 networks. Internally stored as 17 bytes (address + prefix length).
 
-Accepted input types: `ipaddress.IPv6Network`, `str`
-Output type: `ipaddress.IPv6Network`
+Accepted types: `ipaddress.IPv6Network`
 
 
 ### EnumField (todo)
@@ -401,16 +384,14 @@ MEMBERS = (
 EnumField(members=MEMBERS)
 ```
 
-Accepted input type: `int` (must be an `int` specified in `members` tuple)
-Output type: `int`
+Accepted type: `tuple[ints]`
 
 
 ### UUIDField (todo)
 
 Stores UUID instances. Internally stored as 16 bytes.
 
-Accepted input types: `uuid.UUID`, `str`, `int`, `bytes`
-Output type: `uuid.UUID`
+Accepted types: `uuid.UUID`
 
 
 ## Tests
