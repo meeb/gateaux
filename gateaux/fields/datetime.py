@@ -1,4 +1,4 @@
-from typing import Type, Union
+from typing import Type
 from datetime import datetime
 from calendar import timegm
 import pytz
@@ -32,7 +32,7 @@ class DateTimeField(BaseField):
             Convert a UNIX timestamp to a datetime in UTC.
         '''
         if not isinstance(v, float):
-            raise ValidationError(f'unpack() expected an float, got: {type(v)}')
+            raise ValidationError(f'unpack() expected a float, got: {type(v)}')
         dt:datetime = datetime.utcfromtimestamp(v)
         dt = pytz.utc.localize(dt)
         return self.validate_unpacked(dt)
