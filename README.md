@@ -16,21 +16,21 @@ nor provides any extended data validation. FoundationDB is designed to have laye
 abstraction built on top of it to provide additional features.
 
 The premise of `gateaux` is that where you currently have, in fdb library terms,
-`tr[(some, data)] = (other, arbtrary, data)` is to enforce strict standardisation of
+`tr[(some, data)] = (other, arbitrary, data)` is to enforce strict standardisation of
 data in these tuples while allowing more complex types (datetime, ipaddress etc.). In
 addition, the concept of structures allows for easier developer comprehension of what
 data is being stored in what FoundationDB keyspace.
 
 `gateaux` is a pure Python 3 (>=3.6) library which provides rich data type handling and
 validation on top of the usual `pack()` and `unpack()` methods and extends the
-`fdb.tuple` built-in layer. It is loosely modled from the interfaces to relational
+`fdb.tuple` built-in layer. It is loosely modelled from the interfaces to relational
 database object-relational mapper (RDBMS ORM) systems. Each `gateaux` structure
 (comparable to a "model" in the ORM world) effectively formats one single key/value pair
 at a time with more rigid validation than the `fdb` library provides out of the box.
 
 `gateaux` does not handle FoundationDB connections for you, just the data parsing
 part of your application. Effectively `gateaux` is just a data schema enforcing fancy
-wrapper that sits on top of tuple packing and unpacking with some nice syntaxic sugar.
+wrapper that sits on top of tuple packing and unpacking with some nice syntactic sugar.
 `gateaux` does not abstract away any of the useful existing `fdb` keyspace interface.
 
 While there is overhead in checking data and converting it between types, `gateaux` is
@@ -208,11 +208,11 @@ def get_temp(tr, year, day):
 ## Enforced data format
 
 `gateaux` enforces certain requirements. These are not suitable for every project so
-check carefully and verify the libray is appropriate for your application before you
+check carefully and verify the library is appropriate for your application before you
 use it:
 
 1. All structures are in their own FoundationDB directory using the directory layer
-2. Key tuple members are varialble, a key of 3 elements can contain 1, 2 or 3 values,
+2. Key tuple members are variable, a key of 3 elements can contain 1, 2 or 3 values,
    this is to support prefixes and ranges for keys
 3. Value tuple members are fixed, a value of 3 elements must always contain 3 values
 3. Validation is strict, if you define a field as a StringField you cannot store bytes
@@ -265,7 +265,7 @@ have the following interface:
   type for the field.
 * `structure.description` a property which returns a `dict` describing the model,
   including the name of the structure and any doc string as well as lists of
-  descriptions for each field in the key and value. You can use this to programatically
+  descriptions for each field in the key and value. You can use this to programmatically
   inspect a structure in the future and is useful if you have many structures.
 
 
@@ -373,7 +373,7 @@ Accepted types: `ipaddress.IPv6Network`
 Stores enums. Internally stored as an integer that maps to a specified value. Required
 arguments:
 
-* `members=tuple` A mandatory tuple of tuples of values for the enum.
+* `members=tuple` A mandatory tuple of tuples of values for the Enum.
 
 Example:
 
@@ -401,7 +401,7 @@ Accepted types: `uuid.UUID`
 
 There is a pretty comprehensive test suite. As `gateaux` is designed to pack and unpack
 important data it has good coverage to make sure it's behaving as expected. You can run
-it by cloing this repository then execuiting:
+it by cloning this repository then executing:
 
 ```bash
 $ ./run-tests.sh
