@@ -320,7 +320,7 @@ Stores booleans.
 Accepted types: `bool`
 
 
-### StringField (todo)
+### StringField
 
 Stores strings. Optional arguments:
 
