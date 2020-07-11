@@ -94,7 +94,7 @@ class EventLog(gateaux.Structure):
             name='date',
             help_text='Date and time of the event',
         ),
-        gateaux.IPv4Field(
+        gateaux.IPv4AddressField(
             name='ip address',
             help_text='IPv4 address of the client that triggered the event',
         )
