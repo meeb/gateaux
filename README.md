@@ -1,5 +1,3 @@
-# UNDER ACTIVE DEVELOPMENT, DO NOT USE, NOT ON PYPI
-
 # gateaux
 
 Data structures and typing for FoundationDB.
