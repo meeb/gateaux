@@ -11,10 +11,9 @@ https://github.com/apple/foundationdb/
 
 FoundationDB has, by design, a bare minimum of features. It presents an interface to
 applications which reads and writes binary data with a few basic helper layers.
-
-It has no support for rich data types (for example `datetime` objects) nor provides any
-extended data validation. FoundationDB is designed to have layers of abstraction built
-on top of it to provide additional features.
+FoundationDB has no native support for rich data types (for example `datetime` objects)
+nor provides any extended data validation. FoundationDB is designed to have layers of
+abstraction built on top of it to provide additional features.
 
 The premise of `gateaux` is that where you currently have, in fdb library terms,
 `tr[(some, data)] = (other, arbtrary, data)` is to enforce strict standardisation of
@@ -218,13 +217,12 @@ use it:
 3. Value tuple members are fixed, a value of 3 elements must always contain 3 values
 3. Validation is strict, if you define a field as a StringField you cannot store bytes
    in it etc. Types must match
-4. All calls to `gateaux` methods are expected to be made within a FoundationDB
-   transaciton, with the transaction as the first argument
-5. While possible to support multiple data types, such as cast int(1) to str('1') if an
-   integer is provided to a StringField, by choice typing is enforced and this will
+4. While possible to support multiple data types, such as cast int(1) to str('1') if an
+   integer is provided to a StringField, by design typing is enforced and this will
    raise an exception
-6. You should not use direct binary data with FoundationDB while using `gateaux`, always
-   use tuples of other types
+5. You should not use direct binary data with FoundationDB while using `gateaux`, always
+   use tuples of other types, `tr[b'key'] = b'value` is incompatible with `gateaux`, but
+   `tr[(b'key',)] = (b'value',)` is compatible.
 
 `gateaux` conforms to the same idea of `fdb.tuple` such that packing then unpacking a
 tuple should always result in the same original tuple of data.
