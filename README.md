@@ -10,11 +10,17 @@ store and employs ACID transactions for all operations." - taken from
 https://github.com/apple/foundationdb/
 
 FoundationDB has, by design, a bare minimum of features. It presents an interface to
-applications which reads and writes binary data with a few basic helper layers. 
+applications which reads and writes binary data with a few basic helper layers.
 
 It has no support for rich data types (for example `datetime` objects) nor provides any
 extended data validation. FoundationDB is designed to have layers of abstraction built
 on top of it to provide additional features.
+
+The premise of `gateaux` is that where you currently have, in fdb library terms,
+`tr[(some, data)] = (other, arbtrary, data)` is to enforce strict standardisation of
+data in these tuples while allowing more complex types (datetime, ipaddress etc.). In
+addition, the concept of structures allows for easier developer comprehension of what
+data is being stored in what FoundationDB keyspace.
 
 `gateaux` is a pure Python 3 (>=3.6) library which provides rich data type handling and
 validation on top of the usual `pack()` and `unpack()` methods and extends the
@@ -26,7 +32,7 @@ at a time with more rigid validation than the `fdb` library provides out of the 
 `gateaux` does not handle FoundationDB connections for you, just the data parsing
 part of your application. Effectively `gateaux` is just a data schema enforcing fancy
 wrapper that sits on top of tuple packing and unpacking with some nice syntaxic sugar.
-`gateaux` does not abstract away any of the useful existing keyspace interface.
+`gateaux` does not abstract away any of the useful existing `fdb` keyspace interface.
 
 While there is overhead in checking data and converting it between types, `gateaux` is
 relatively performant as all it does is shuffle native Python data types about.
