@@ -10,3 +10,4 @@ from .fields.float import FloatField
 from .fields.boolean import BooleanField
 from .fields.string import StringField
 from .fields.datetime import DateTimeField
+from .fields.ipv4address import IPv4AddressField

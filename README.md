@@ -345,7 +345,7 @@ timezone will convert it to UTC when read. If the provided `datetime.datetime` i
 has no timezone info it will be assumed to be UTC.
 
 
-### IPv4AddressField (todo)
+### IPv4AddressField
 
 Stores IPv4 addresses. Internally stored as 4 bytes.
 
