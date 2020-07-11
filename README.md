@@ -13,11 +13,14 @@ FoundationDB has no native support for rich data types (for example `datetime` o
 nor provides any extended data validation. FoundationDB is designed to have layers of
 abstraction built on top of it to provide additional features.
 
-The premise of `gateaux` is that where you currently have, in fdb library terms,
-`tr[(some, data)] = (other, arbitrary, data)` is to enforce strict standardisation of
-data in these tuples while allowing more complex types (datetime, ipaddress etc.). In
-addition, the concept of structures allows for easier developer comprehension of what
-data is being stored in what FoundationDB keyspace.
+The premise of `gateaux` is that where you currently have, in `fdb` library terms,
+`tr[(some, data)] = (other, arbitrary, data)` of unstructured data is to enforce strict
+standardisation of data in these tuples while allowing more complex types (datetime,
+ipaddress etc.). In addition, the concept of structures allows for easier developer
+comprehension of what data is being stored in what FoundationDB keyspace. `gateaux` has
+a lot of code for not much of an interface, but it is designed to enforce structure and
+types and therefore is over-engineered and over-tested by design so you don't have to
+worry about your data structures in your upstream applications which use `gateaux`.
 
 `gateaux` is a pure Python 3 (>=3.6) library which provides rich data type handling and
 validation on top of the usual `pack()` and `unpack()` methods and extends the
@@ -286,7 +289,7 @@ All fields support the following arguments:
 Other field types may support more arguments.
 
 
-### `BinaryField`
+### BinaryField
 
 Stores bytes. Optional arguments:
 
@@ -295,7 +298,7 @@ Stores bytes. Optional arguments:
 Accepted type: `bytes`
 
 
-### `IntegerField`
+### IntegerField
 
 Stores integers. Optional arguments:
 
