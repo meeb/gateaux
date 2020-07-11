@@ -1,24 +1,24 @@
 from typing import Tuple
 import unittest
 import fdb.tuple
+from fdb.impl import Database
+from fdb.directory_impl import DirectorySubspace
 import gateaux
 
 
-class MockFoundationDBConnection:
+class MockFoundationDBConnection(Database):
     '''
-        A mock FoundationDB connection for testing. The only feature gateaux uses from
-        this is fdb.directory.create_or_open(...) so we can create a bare minimum
-        example for a mock testing interface.
+        A mock FoundationDB connection for testing, only needs to match a type.
     '''
+    
+    def __init__(self, *args, **kwargs):
+        pass
+    
+    def __del__(self):
+        pass
 
-    def __init__(self) -> None:
-        class Directory:
-            def create_or_open(self, path:Tuple[str, ...]) -> MockFoundationDBDirectory:
-                return MockFoundationDBDirectory(path)
-        self.directory = Directory()
 
-
-class MockFoundationDBDirectory:
+class MockFoundationDBDirectory(DirectorySubspace):
     '''
         A mock FoundationDB directory layer instance which supports test data storage.
         When calling pack() and unpack() this will use FoundationDB's fdb.tuple.pack.
@@ -28,8 +28,7 @@ class MockFoundationDBDirectory:
         gateaux's packing and unpacking, not FoundationDB itself.
     '''
 
-    def __init__(self, path:Tuple[str, ...]) -> None:
-        self.path:Tuple[str, ...] = path
+    def __init__(self, *args, **kwargs) -> None:
         self.data:dict = {}
 
     def __getitem__(self, key:bytes) -> bytes:
@@ -57,12 +56,10 @@ class MockFoundationDBDirectory:
         return fdb.tuple.unpack(v[2:])
 
 
-class MockConnectionTestCase(unittest.TestCase):
+class MockDirectoryTestCase(unittest.TestCase):
 
-    def test_mock_connection(self) -> None:
-        mock_connection = MockFoundationDBConnection()
-        mock_dir = mock_connection.directory.create_or_open(('test', 'path'))
-        self.assertEqual(mock_dir.path, ('test', 'path'))
+    def test_mock_directory(self) -> None:
+        mock_dir = MockFoundationDBDirectory()
         mock_dir[b'test'] = b'test'
         self.assertEqual(mock_dir[b'test'], b'test')
         del mock_dir[b'test']
@@ -72,90 +69,95 @@ class MockConnectionTestCase(unittest.TestCase):
         unpacked = mock_dir.unpack(packed)
         self.assertEqual(unpacked, ('test', 'tuple'))
 
+
 class StructureTestCase(unittest.TestCase):
 
     def test_validation_directory(self) -> None:
         mock_connection = MockFoundationDBConnection()
+        mock_dir = MockFoundationDBDirectory()
         class InvalidDirectoryTestStructure(gateaux.Structure):
             directory = ('test', b'directory')
             key = (gateaux.BinaryField(),)
             value = (gateaux.BinaryField(),)
         with self.assertRaises(gateaux.errors.StructureError):
-            InvalidDirectoryTestStructure(mock_connection)
+            InvalidDirectoryTestStructure(mock_connection, directory=mock_dir)
         class NoDirectoryTestStructure(gateaux.Structure):
             key = (gateaux.BinaryField(),)
             value = (gateaux.BinaryField(),)
         with self.assertRaises(gateaux.errors.StructureError):
-            NoDirectoryTestStructure(mock_connection)
+            NoDirectoryTestStructure(mock_connection, directory=mock_dir)
         class EmptyDirectoryTestStructure(gateaux.Structure):
             directory = ()
             key = (gateaux.BinaryField(),)
             value = (gateaux.BinaryField(),)
         with self.assertRaises(gateaux.errors.StructureError):
-             EmptyDirectoryTestStructure(mock_connection)
+             EmptyDirectoryTestStructure(mock_connection, directory=mock_dir)
         class ValidDirectoryTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(),)
             value = (gateaux.BinaryField(),)
-        ValidDirectoryTestStructure(mock_connection)
+        ValidDirectoryTestStructure(mock_connection, directory=mock_dir)
 
     def test_validation_key(self) -> None:
         mock_connection = MockFoundationDBConnection()
+        mock_dir = MockFoundationDBDirectory()
         class InvalidKeyTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(), object())
             value = (gateaux.BinaryField(),)
         with self.assertRaises(gateaux.errors.StructureError):
-            InvalidKeyTestStructure(mock_connection)
+            InvalidKeyTestStructure(mock_connection, directory=mock_dir)
         class NoKeyTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             value = (gateaux.BinaryField(),)
         with self.assertRaises(gateaux.errors.StructureError):
-            NoKeyTestStructure(mock_connection)
+            NoKeyTestStructure(mock_connection, directory=mock_dir)
         class EmptyKeyTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             key = ()
             value = (gateaux.BinaryField(),)
         with self.assertRaises(gateaux.errors.StructureError):
-            EmptyKeyTestStructure(mock_connection)
+            EmptyKeyTestStructure(mock_connection, directory=mock_dir)
         class ValidKeyTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(),)
             value = (gateaux.BinaryField(),)
-        ValidKeyTestStructure(mock_connection)
+        ValidKeyTestStructure(mock_connection, directory=mock_dir)
 
     def test_validation_value(self) -> None:
         mock_connection = MockFoundationDBConnection()
+        mock_dir = MockFoundationDBDirectory()
         class InvalidValueTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(),)
             value = (gateaux.BinaryField(), object())
         with self.assertRaises(gateaux.errors.StructureError):
-            InvalidValueTestStructure(mock_connection)
+            InvalidValueTestStructure(mock_connection, directory=mock_dir)
         class NoValueTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             value = (gateaux.BinaryField(),)
         with self.assertRaises(gateaux.errors.StructureError):
-            NoValueTestStructure(mock_connection)
+            NoValueTestStructure(mock_connection, directory=mock_dir)
         class EmptyValueTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(),)
             value = ()
         with self.assertRaises(gateaux.errors.StructureError):
-            EmptyValueTestStructure(mock_connection)
+            EmptyValueTestStructure(mock_connection, directory=mock_dir)
         class ValidValueTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(),)
             value = (gateaux.BinaryField(),)
-        ValidValueTestStructure(mock_connection)
+        ValidValueTestStructure(mock_connection, directory=mock_dir)
 
     def test_pack(self) -> None:
         mock_connection = MockFoundationDBConnection()
+        mock_dir = MockFoundationDBDirectory()
         class ValidTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(), gateaux.BinaryField())
             value = (gateaux.BinaryField(), gateaux.BinaryField())
-        test = ValidTestStructure(mock_connection)
+        test = ValidTestStructure(mock_connection, directory=mock_dir)
         with self.assertRaises(gateaux.errors.ValidationError):
             # Too many
             test._pack(test.key, (b'a', b'b', b'c'))
@@ -167,11 +169,12 @@ class StructureTestCase(unittest.TestCase):
 
     def test_unpack(self) -> None:
         mock_connection = MockFoundationDBConnection()
+        mock_dir = MockFoundationDBDirectory()
         class ValidTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(), gateaux.BinaryField())
             value = (gateaux.BinaryField(), gateaux.BinaryField())
-        test = ValidTestStructure(mock_connection)
+        test = ValidTestStructure(mock_connection, directory=mock_dir)
         with self.assertRaises(gateaux.errors.ValidationError):
             # Too many
             test._unpack(test.key, b'\x00\x00\x01a\x00\x01b\x00\x01c\x00')
@@ -183,11 +186,12 @@ class StructureTestCase(unittest.TestCase):
 
     def test_interface(self) -> None:
         mock_connection = MockFoundationDBConnection()
+        mock_dir = MockFoundationDBDirectory()
         class ValidTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(), gateaux.BinaryField(),)
             value = (gateaux.BinaryField(), gateaux.BinaryField(),)
-        test = ValidTestStructure(mock_connection)
+        test = ValidTestStructure(mock_connection, directory=mock_dir)
         with self.assertRaises(gateaux.errors.ValidationError):
             # Empty
             test.pack_key(())
@@ -217,12 +221,13 @@ class StructureTestCase(unittest.TestCase):
 
     def test_description(self) -> None:
         mock_connection = MockFoundationDBConnection()
+        mock_dir = MockFoundationDBDirectory()
         class ValidTestStructure(gateaux.Structure):
             '''test doc string'''
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(),)
             value = (gateaux.BinaryField(),)
-        test = ValidTestStructure(mock_connection)
+        test = ValidTestStructure(mock_connection, directory=mock_dir)
         desc = test.description
         self.assertEqual(desc['name'], 'ValidTestStructure')
         self.assertEqual(desc['doc'], 'test doc string')

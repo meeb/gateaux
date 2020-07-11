@@ -1,4 +1,7 @@
 from typing import Any, Tuple
+import fdb
+from fdb.impl import Database
+from fdb.directory_impl import DirectorySubspace
 from .errors import StructureError, ValidationError
 from .fields.base import BaseField
 
@@ -9,10 +12,15 @@ class Structure:
     key: Tuple = ()
     value: Tuple = ()
 
-    def __init__(self, connection: Any) -> None:
-        self.connection: Any = connection
+    def __init__(self, connection: Database,
+                 directory: DirectorySubspace = None) -> None:
         self.validate()
-        self.fdbdir: Any = self.connection.directory.create_or_open(self.directory)
+        self.connection: Database = connection
+        if directory:
+            self.fdbdir: DirectorySubspace = directory
+        else:            
+            self.fdbdir: DirectorySubspace = fdb.directory.create_or_open(
+                self.connection, self.directory)
         self.num_key_fields = len(self.key)
         self.num_value_fields = len(self.value)
 
