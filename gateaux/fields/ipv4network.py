@@ -22,8 +22,7 @@ class IPv4NetworkField(BaseField):
             Pack an IPv4Network into bytes.
         '''
         v = self.validate_packed(v)
-        network: IPv4Network = IPv4Network(v)
-        return network.network_address.packed + bytes([network.prefixlen])
+        return v.network_address.packed + bytes([v.prefixlen])
 
     def unpack(self, v: bytes) -> IPv4Network:
         '''

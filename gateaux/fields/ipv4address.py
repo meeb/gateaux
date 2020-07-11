@@ -20,8 +20,7 @@ class IPv4AddressField(BaseField):
             Pack an IPv4Address into bytes.
         '''
         v = self.validate_packed(v)
-        ip: IPv4Address = IPv4Address(v)
-        return ip.packed
+        return v.packed
 
     def unpack(self, v: bytes) -> IPv4Address:
         '''
@@ -29,5 +28,7 @@ class IPv4AddressField(BaseField):
         '''
         if not isinstance(v, bytes):
             raise ValidationError(f'unpack() expected bytes, got: {type(v)}')
+        if len(v) != 4:
+            raise ValidationError(f'unpack() expected exactly 4 bytes, got: {len(v)}')
         ip: IPv4Address = IPv4Address(v)
         return self.validate_unpacked(ip)

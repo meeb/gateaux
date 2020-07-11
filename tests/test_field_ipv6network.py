@@ -16,6 +16,8 @@ class IPv6NetworkFieldTestCase(unittest.TestCase):
         field = gateaux.IPv6NetworkField()
         with self.assertRaises(gateaux.errors.ValidationError):
             field.unpack('not bytes') # type: ignore
+        with self.assertRaises(gateaux.errors.ValidationError):
+            field.unpack(b'not 17 bytes')
         self.assertEqual(field.unpack(
             b'\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00@'),
             IPv6Network('1::/64'))

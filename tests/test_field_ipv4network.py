@@ -15,5 +15,7 @@ class IPv4NetworkFieldTestCase(unittest.TestCase):
         field = gateaux.IPv4NetworkField()
         with self.assertRaises(gateaux.errors.ValidationError):
             field.unpack('not bytes') # type: ignore
+        with self.assertRaises(gateaux.errors.ValidationError):
+            field.unpack(b'not 5 bytes')
         self.assertEqual(field.unpack(b'\x7f\x00\x00\x01 '),
                          IPv4Network('127.0.0.1/32'))

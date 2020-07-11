@@ -7,9 +7,6 @@ import pytz
 
 class DateTimeFieldTestCase(unittest.TestCase):
 
-    def test_constructor(self) -> None:
-        field = gateaux.DateTimeField()
-
     def test_validation(self) -> None:
         field = gateaux.DateTimeField()
         dt = datetime.utcnow().replace(microsecond=0)

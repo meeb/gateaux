@@ -20,8 +20,7 @@ class IPv6AddressField(BaseField):
             Pack an IPv6Address into bytes.
         '''
         v = self.validate_packed(v)
-        ip: IPv6Address = IPv6Address(v)
-        return ip.packed
+        return v.packed
 
     def unpack(self, v: bytes) -> IPv6Address:
         '''
@@ -29,5 +28,7 @@ class IPv6AddressField(BaseField):
         '''
         if not isinstance(v, bytes):
             raise ValidationError(f'unpack() expected bytes, got: {type(v)}')
+        if len(v) != 16:
+            raise ValidationError(f'unpack() expected exactly 16 bytes, got: {len(v)}')
         ip: IPv6Address = IPv6Address(v)
         return self.validate_unpacked(ip)
