@@ -1,4 +1,4 @@
-from typing import Tuple, Type, Union
+from typing import Type, Union
 from .base import BaseField
 from ..errors import FieldError, ValidationError
 
