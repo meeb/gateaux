@@ -204,7 +204,8 @@ check carefully and verify the libray is appropriate for your application before
 use it:
 
 1. All structures are in their own FoundationDB directory using the directory layer
-2. Key tuple members are varialble, a key of 3 elements can contain 1, 2 or 3 values
+2. Key tuple members are varialble, a key of 3 elements can contain 1, 2 or 3 values,
+   this is to support prefixes and ranges for keys
 3. Value tuple members are fixed, a value of 3 elements must always contain 3 values
 3. Validation is strict, if you define a field as a StringField you cannot store bytes
    in it etc. Types must match
