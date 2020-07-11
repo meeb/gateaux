@@ -25,7 +25,7 @@ class DateTimeField(BaseField):
         '''
         v = self.validate_packed(v)
         unixts:int = timegm(v.timetuple())
-        return unixts + (v.microsecond / 100000)
+        return unixts + (v.microsecond / 1000000)
 
     def unpack(self, v: float) -> datetime:
         '''
