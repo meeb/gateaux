@@ -395,7 +395,7 @@ EnumField(members=MEMBERS)
 Accepted type: `tuple[ints]`
 
 
-### UUIDField (todo)
+### UUIDField
 
 Stores UUID instances. Internally stored as 16 bytes.
 

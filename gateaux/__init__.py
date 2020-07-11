@@ -14,3 +14,4 @@ from .fields.ipv4address import IPv4AddressField
 from .fields.ipv6address import IPv6AddressField
 from .fields.ipv4network import IPv4NetworkField
 from .fields.ipv6network import IPv6NetworkField
+from .fields.uuid import UUIDField
