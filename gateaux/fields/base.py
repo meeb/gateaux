@@ -1,4 +1,4 @@
-from typing import Any, Tuple
+from typing import Any, Type
 
 
 class BaseField:
@@ -7,7 +7,7 @@ class BaseField:
     '''
 
     # The data type which is accepted as an input and returned as an output
-    data_type: Any = object
+    data_type: Type = object
 
     def __init__(self, **kwargs) -> None:
         if 'name' in kwargs:
