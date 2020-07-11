@@ -1,5 +1,6 @@
 from typing import Tuple
 import unittest
+import fdb.tuple
 import gateaux
 
 
@@ -20,6 +21,11 @@ class MockFoundationDBConnection:
 class MockFoundationDBDirectory:
     '''
         A mock FoundationDB directory layer instance which supports test data storage.
+        When calling pack() and unpack() this will use FoundationDB's fdb.tuple.pack.
+        During testing this mock class just prefixes the response with \x00\x00 to
+        simulate a real directory prefix. As we're not actually talking to a
+        FoundationDB cluster during testing this is sufficient aswe only need to test
+        gateaux's packing and unpacking, not FoundationDB itself.
     '''
 
     def __init__(self, path:Tuple[str, ...]) -> None:
@@ -37,6 +43,19 @@ class MockFoundationDBDirectory:
         del self.data[key]
         return True
 
+    def pack(self, v:Tuple) -> bytes:
+        '''
+            Pack a tuple and prepend \x00\x00 to simulate a FoundationDB directory.
+        '''
+        return b'\x00\x00' + fdb.tuple.pack(v)
+
+    def unpack(self, v:bytes) -> tuple:
+        '''
+            Truncate the first two bytes then unpack the tuple.
+        '''
+        assert(v[0:2] == b'\x00\x00')
+        return fdb.tuple.unpack(v[2:])
+
 
 class MockConnectionTestCase(unittest.TestCase):
 
@@ -48,7 +67,10 @@ class MockConnectionTestCase(unittest.TestCase):
         self.assertEqual(mock_dir[b'test'], b'test')
         del mock_dir[b'test']
         self.assertEqual(mock_dir[b'test'], None)
-
+        packed = mock_dir.pack(('test', 'tuple'))
+        self.assertEqual(packed, b'\x00\x00\x02test\x00\x02tuple\x00')
+        unpacked = mock_dir.unpack(packed)
+        self.assertEqual(unpacked, ('test', 'tuple'))
 
 class StructureTestCase(unittest.TestCase):
 
