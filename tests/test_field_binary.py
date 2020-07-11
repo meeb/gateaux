@@ -6,10 +6,6 @@ class BinaryFieldTestCase(unittest.TestCase):
 
     def test_constructor(self) -> None:
         field = gateaux.BinaryField()
-        self.assertEqual(field.name, '')
-        self.assertEqual(field.help_text, '')
-        self.assertEqual(field.null, False)
-        self.assertEqual(field.default, None)
         self.assertEqual(field.max_length, 0)
         field = gateaux.BinaryField(max_length=12345)
         self.assertEqual(field.max_length, 12345)
