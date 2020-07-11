@@ -317,7 +317,7 @@ Stores floats. Optional arguments:
 Accepted type: `float`
 
 
-### BooleanField (todo)
+### BooleanField
 
 Stores booleans.
 
