@@ -20,9 +20,7 @@ class BinaryField(BaseField):
         '''
             No packing is required. Perform basic validation and return.
         '''
-        if not isinstance(v, self.data_type):
-            raise ValidationError(f'pack() expected a value with type '
-                                  f'{self.data_type}, got {type(v)}')
+        v = self.validate_packed(v)
         if self.max_length and len(v) > self.max_length:
             raise ValidationError(f'byte length of {len(v)} exceeds max_length '
                                   f'of {self.max_length}')
@@ -30,9 +28,6 @@ class BinaryField(BaseField):
 
     def unpack(self, v: bytes) -> bytes:
         '''
-            No unpacking is required. Perform basic validation and return.
+            No unpacking is required.
         '''
-        if not isinstance(v, self.data_type):
-            raise ValidationError(f'unpacl() expected a value with type '
-                                  f'{self.data_type}, got {type(v)}')
-        return v
+        return self.validate_unpacked(v)

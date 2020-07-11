@@ -238,12 +238,8 @@ db = fdb.open()
 
 class SomeUserStructure(gateaux.Structure):
     directory = ('some', 'directory')
-    key = (
-        gateaux.BinaryField(),
-    )
-    value = (
-        gateaux.BinaryField(),
-    )
+    key = (gateaux.BinaryField(),)
+    value = (gateaux.BinaryField(),)
 
 some_structure_instance = SomeUserStructure(db)
 ```
@@ -282,7 +278,8 @@ All fields support the following arguments:
    False.
 
 * `default=value` If set, defines a default for a field. The type must match the
-  required type for the field.
+  required type for the field. A default is only used if `null=True` and `None` is
+  provided to the field.
 
 Other field types may support more arguments.
 

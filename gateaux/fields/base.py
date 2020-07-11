@@ -1,4 +1,5 @@
 from typing import Any, Type
+from ..errors import ValidationError
 
 
 class BaseField:
@@ -55,6 +56,29 @@ class BaseField:
             'null': self.null,
             'default': self.default,
         }
+
+    def validate_packed(self, v: Any) -> Any:
+        '''
+            Performs validation on a value before pack()ing.
+        '''
+        if v is None:
+            if self.default:
+                v = self.default
+            elif not self.null:
+                raise ValidationError(f'value is required')
+        elif not isinstance(v, self.data_type):
+            raise ValidationError(f'expected value to pack with type '
+                                  f'{self.data_type}, got {type(v)}')
+        return v
+
+    def validate_unpacked(self, v: Any) -> Any:
+        '''
+            Performs validation on a value after unpack()ing.
+        '''
+        if not isinstance(v, self.data_type):
+            raise ValidationError(f'expected value unpacked with type '
+                                  f'{self.data_type}, got {type(v)}')
+        return v
 
     def pack(self, v: Any) -> Any:
         '''

@@ -33,6 +33,18 @@ class BaseFieldTestCase(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             field.unpack('test')
 
+    def test_null_and_default(self) -> None:
+        mandatory_field = gateaux.BaseField()
+        with self.assertRaises(gateaux.errors.ValidationError):
+            mandatory_field.validate_packed(None)
+        self.assertEqual(mandatory_field.validate_packed(b'test'), b'test')
+        optional_field = gateaux.BaseField(null=True)
+        self.assertEqual(optional_field.validate_packed(None), None)
+        optional_default_field = gateaux.BaseField(null=True, default=b'default')
+        self.assertEqual(optional_default_field.validate_packed(None), b'default')
+        mandatory_default_field = gateaux.BaseField(default=b'default')
+        self.assertEqual(mandatory_default_field.validate_packed(b'test'), b'test')
+
     def test_description(self) -> None:
         field = gateaux.BaseField(
             name='test name',
