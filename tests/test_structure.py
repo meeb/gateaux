@@ -149,15 +149,71 @@ class StructureTestCase(unittest.TestCase):
             value = (gateaux.BinaryField(),)
         ValidValueTestStructure(mock_connection)
 
+    def test_pack(self) -> None:
+        mock_connection = MockFoundationDBConnection()
+        class ValidTestStructure(gateaux.Structure):
+            directory = ('test', 'directory')
+            key = (gateaux.BinaryField(), gateaux.BinaryField())
+            value = (gateaux.BinaryField(), gateaux.BinaryField())
+        test = ValidTestStructure(mock_connection)
+        with self.assertRaises(gateaux.errors.ValidationError):
+            # Too many
+            test._pack(test.key, (b'a', b'b', b'c'))
+        with self.assertRaises(gateaux.errors.ValidationError):
+            # Wrong type
+            test._pack(test.key, (b'a', 1))
+        packed = test._pack(test.key, (b'a', b'b'))
+        self.assertEqual(packed, b'\x00\x00\x01a\x00\x01b\x00')
+
+    def test_unpack(self) -> None:
+        mock_connection = MockFoundationDBConnection()
+        class ValidTestStructure(gateaux.Structure):
+            directory = ('test', 'directory')
+            key = (gateaux.BinaryField(), gateaux.BinaryField())
+            value = (gateaux.BinaryField(), gateaux.BinaryField())
+        test = ValidTestStructure(mock_connection)
+        with self.assertRaises(gateaux.errors.ValidationError):
+            # Too many
+            test._unpack(test.key, b'\x00\x00\x01a\x00\x01b\x00\x01c\x00')
+        with self.assertRaises(gateaux.errors.ValidationError):
+            # Wrong type
+            test._unpack(test.key, b'\x00\x00\x01a\x00\x02b\x00')
+        unpacked = test._unpack(test.key, b'\x00\x00\x01a\x00\x01b\x00')
+        self.assertEqual(unpacked, (b'a', b'b'))
+
     def test_interface(self) -> None:
         mock_connection = MockFoundationDBConnection()
         class ValidTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
-            key = (gateaux.BinaryField(),)
-            value = (gateaux.BinaryField(),)
+            key = (gateaux.BinaryField(), gateaux.BinaryField(),)
+            value = (gateaux.BinaryField(), gateaux.BinaryField(),)
         test = ValidTestStructure(mock_connection)
-        packed_key = test.pack_key((b'test',))
-        #print(packed_key)
+        with self.assertRaises(gateaux.errors.ValidationError):
+            # Empty
+            test.pack_key(())
+        with self.assertRaises(gateaux.errors.ValidationError):
+            # Too many
+            test.pack_key((b'a', b'b', b'b'))
+        with self.assertRaises(gateaux.errors.ValidationError):
+            # Empty
+            test.pack_value(())
+        with self.assertRaises(gateaux.errors.ValidationError):
+            # Too many
+            test.pack_value((b'a', b'b', b'b'))
+        # 0 < len(key_values) <= len(structure.key) is allowed
+        test.pack_key((b'test',))
+        # Where as for value fields, len(key_values) == len(structure.values)
+        with self.assertRaises(gateaux.errors.ValidationError):
+            test.pack_value((b'test',))
+        # Validate packing
+        packed_key = test.pack_key((b'test', b'test'))
+        self.assertEqual(packed_key, b'\x00\x00\x01test\x00\x01test\x00')
+        unpacked_key = test.unpack_key(packed_key)
+        self.assertEqual(unpacked_key, (b'test', b'test'))
+        packed_value = test.pack_value((b'test', b'test'))
+        self.assertEqual(packed_value, b'\x00\x00\x01test\x00\x01test\x00')
+        unpacked_value = test.unpack_value(packed_value)
+        self.assertEqual(unpacked_value, (b'test', b'test'))
 
     def test_description(self) -> None:
         mock_connection = MockFoundationDBConnection()
@@ -170,7 +226,7 @@ class StructureTestCase(unittest.TestCase):
         desc = test.description
         self.assertEqual(desc['name'], 'ValidTestStructure')
         self.assertEqual(desc['doc'], 'test doc string')
-        # Field description testing is performed in test_field_base, no need to dupe
+        # Field description testing is in test_field_base, no need to dupe here
         self.assertIsInstance(desc['key'], list)
         self.assertEqual(len(desc['key']), 1)
         self.assertIsInstance(desc['key'][0], dict)

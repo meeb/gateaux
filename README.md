@@ -149,7 +149,7 @@ def complete_example(tr):
         # Attempting to put a string into a DateTime field
         key_tuple = ('wrong type, not a datetime', IPv4Address('127.0.0.1'))
         packed_key = event_log.pack_key(key_tuple)
-    except gateaux.errors.GateauxValidationError as e:
+    except gateaux.errors.ValidationError as e:
         # ... handle the error
         print('validation error', e)
 
