@@ -352,7 +352,7 @@ Stores IPv4 addresses. Internally stored as 4 bytes.
 Accepted types: `ipaddress.IPv4Address`
 
 
-### IPv4NetworkField (todo)
+### IPv4NetworkField
 
 Stores IPv4 networks. Internally stored as 5 bytes (address + prefix length).
 
