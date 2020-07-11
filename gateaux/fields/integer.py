@@ -25,9 +25,6 @@ class IntegerField(BaseField):
             No packing is required. Perform basic validation and return.
         '''
         v = self.validate_packed(v)
-        if not isinstance(v, self.data_type):
-            raise ValidationError(f'pack() expected a value with type '
-                                  f'{self.data_type}, got {type(v)}')
         if self.min_value and v < self.min_value:
             raise ValidationError(f'value {v} less than min_value of {self.min_value}')
         if self.max_value and v > self.max_value:
