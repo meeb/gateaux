@@ -39,8 +39,8 @@ class BaseField:
         else:
             self.default = None
         if kwargs:
-            err = 'Unexpected keyword arguments passed to field: {}'
-            raise ValueError(err.format(kwargs.keys()))
+            raise ValueError(f'Unexpected keyword arguments passed to '
+                             f'field: {kwargs.keys()}')
 
     @property
     def description(self) -> dict:
@@ -56,7 +56,7 @@ class BaseField:
             'default': self.default,
         }
 
-    def pack(self, v:Any) -> Any:
+    def pack(self, v: Any) -> Any:
         '''
             A field pack accepts one or more types and returns only one type. The
             return of pack() must be one of integer, string or bytes to be pack()'d
@@ -64,7 +64,7 @@ class BaseField:
         '''
         raise NotImplementedError('pack() must be defined')
 
-    def unpack(self, v:Any) -> Any:
+    def unpack(self, v: Any) -> Any:
         '''
             An unpack accepts one data type and returns it or converts it to another
             type. The input to unpack() must be one of integer, string or bytes and

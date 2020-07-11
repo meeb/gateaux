@@ -1,4 +1,4 @@
-from typing import Tuple, Type
+from typing import Type, Union
 from .base import BaseField
 from ..errors import ValidationError
 
@@ -12,30 +12,27 @@ class BinaryField(BaseField):
 
     data_type: Type = bytes
 
-    def __init__(self, max_length:int=0, **kwargs) -> None:
-        self.max_length: int = max_length
+    def __init__(self, max_length: Union[None, int] = None, **kwargs) -> None:
+        self.max_length: Union[None, int] = max_length
         super().__init__(**kwargs)
 
-    def pack(self, v:bytes) -> bytes:
+    def pack(self, v: bytes) -> bytes:
         '''
             No packing is required. Perform basic validation and return.
         '''
-        # Check the arg is of an expected pack data type
         if not isinstance(v, self.data_type):
-            err = f'expected one of {self.data_type} types, got {type(v)}'
-            raise ValidationError(err)
-        if self.max_length > 0:
-            if len(v) > self.max_length:
-                err = f'byte length of {len(v)} exceeds max_length of {self.max_length}'
-                raise ValidationError(err)
+            raise ValidationError(f'pack() expected a value with type '
+                                  f'{self.data_type}, got {type(v)}')
+        if self.max_length and len(v) > self.max_length:
+            raise ValidationError(f'byte length of {len(v)} exceeds max_length '
+                                  f'of {self.max_length}')
         return v
 
-    def unpack(self, v:bytes) -> bytes:
+    def unpack(self, v: bytes) -> bytes:
         '''
             No unpacking is required. Perform basic validation and return.
         '''
-        # Check the arg is of a valid type
         if not isinstance(v, self.data_type):
-            err = f'expected one of {self.data_type} types, got {type(v)}'
-            raise ValidationError(err)
+            raise ValidationError(f'unpacl() expected a value with type '
+                                  f'{self.data_type}, got {type(v)}')
         return v

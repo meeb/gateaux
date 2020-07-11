@@ -9,10 +9,10 @@ class Structure:
     key: Tuple = ()
     value: Tuple = ()
 
-    def __init__(self, connection:Any) -> None:
-        self.connection:Any = connection
+    def __init__(self, connection: Any) -> None:
+        self.connection: Any = connection
         self.validate()
-        self.fdbdir:Any = self.connection.directory.create_or_open(self.directory)
+        self.fdbdir: Any = self.connection.directory.create_or_open(self.directory)
         self.num_key_fields = len(self.key)
         self.num_value_fields = len(self.value)
 
@@ -32,8 +32,8 @@ class Structure:
             raise StructureError(f'{me}.directory must not be empty')
         for i, dir_part in enumerate(self.directory):
             if not isinstance(dir_part, str):
-                err = f'{me}.directory[{i}] is not a string, got: {type(dir_part)}'
-                raise StructureError(err)
+                raise StructureError(f'{me}.directory[{i}] is not a string, '
+                                     f'got: {type(dir_part)}')
         # Check the key is valid
         if not isinstance(self.key, tuple):
             raise StructureError(f'{me}.key must be a tuple')
@@ -41,8 +41,8 @@ class Structure:
             raise StructureError(f'{me}.key must not be empty')
         for i, field in enumerate(self.key):
             if not isinstance(field, BaseField):
-                err = f'{me}.key[{i}] is not a field, got: {type(field)}'
-                raise StructureError(err)
+                raise StructureError(f'{me}.key[{i}] is not a field, '
+                                     f'got: {type(field)}')
         # Check the value is valid
         if not isinstance(self.value, tuple):
             raise StructureError(f'{me}.value must be a tuple')
@@ -50,14 +50,14 @@ class Structure:
             raise StructureError(f'{me}.value must not be empty')
         for i, field in enumerate(self.value):
             if not isinstance(field, BaseField):
-                err = f'{me}.value[{i}] is not a field, got: {type(field)}'
-                raise StructureError(err)
+                raise StructureError(f'{me}.value[{i}] is not a field, '
+                                     f'got: {type(field)}')
         # If we reach here, all looks good
         return True
 
     @property
     def description(self) -> dict:
-        desc:dict = {
+        desc: dict = {
             'name': self.__class__.__name__,
             'doc': self.__doc__,
             'key': [],
@@ -79,7 +79,7 @@ class Structure:
             raise ValidationError(f'cannot _pack(), data tuple has {len(data_tuple)} '
                                   f'elements, larger than the number of fields '
                                   f'at {len(fields)}')
-        field_packed:list = []
+        field_packed: list = []
         for i, v in enumerate(data_tuple):
             field_packed.append(fields[i].pack(v))
         return self.fdbdir.pack(tuple(field_packed))
@@ -95,7 +95,7 @@ class Structure:
             raise ValidationError(f'cannot _unpack(), data tuple has {len(data_tuple)} '
                                   f'elements, larger than the number of fields '
                                   f'at {len(fields)}')
-        field_unpacked:list = []
+        field_unpacked: list = []
         for i, v in enumerate(data_tuple):
             field_unpacked.append(fields[i].unpack(v))
         return tuple(field_unpacked)
@@ -116,7 +116,6 @@ class Structure:
             raise ValidationError(f'key tuple must contain {self.num_key_fields} or '
                                   f'fewer values to match the structures key '
                                   'definitions, got: {key_len}')
-        # Pack the data with the fields defined in self.key
         return self._pack(self.key, key_tuple)
 
     def pack_value(self, value_tuple: Tuple) -> bytes:
@@ -128,7 +127,6 @@ class Structure:
             raise ValidationError(f'value tuple must contain {self.num_value_fields} '
                                   f'values to match the structure, '
                                   f'got: {len(value_tuple)}')
-        # Pack the data with the fields defined in self.value
         return self._pack(self.value, value_tuple)
 
     def unpack_key(self, key_bytes: bytes) -> Tuple:
