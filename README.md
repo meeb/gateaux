@@ -359,7 +359,7 @@ Stores IPv4 networks. Internally stored as 5 bytes (address + prefix length).
 Accepted types: `ipaddress.IPv4Network`
 
 
-### IPv6AddressField (todo)
+### IPv6AddressField
 
 Stores IPv6 addresses. Internally stored as 16 bytes.
 

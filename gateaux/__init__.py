@@ -11,3 +11,4 @@ from .fields.boolean import BooleanField
 from .fields.string import StringField
 from .fields.datetime import DateTimeField
 from .fields.ipv4address import IPv4AddressField
+from .fields.ipv6address import IPv6AddressField
