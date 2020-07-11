@@ -321,7 +321,7 @@ Accepted type: `float`
 
 Stores booleans.
 
-Accepted types: `bool`
+Accepted type: `bool`
 
 
 ### StringField
@@ -349,36 +349,36 @@ has no timezone info it will be assumed to be UTC.
 
 Stores IPv4 addresses. Internally stored as 4 bytes.
 
-Accepted types: `ipaddress.IPv4Address`
+Accepted type: `ipaddress.IPv4Address`
 
 
 ### IPv4NetworkField
 
 Stores IPv4 networks. Internally stored as 5 bytes (address + prefix length).
 
-Accepted types: `ipaddress.IPv4Network`
+Accepted type: `ipaddress.IPv4Network`
 
 
 ### IPv6AddressField
 
 Stores IPv6 addresses. Internally stored as 16 bytes.
 
-Accepted types: `ipaddress.IPv6Address`
+Accepted type: `ipaddress.IPv6Address`
 
 
 ### IPv6NetworkField
 
 Stores IPv4 networks. Internally stored as 17 bytes (address + prefix length).
 
-Accepted types: `ipaddress.IPv6Network`
+Accepted type: `ipaddress.IPv6Network`
 
 
-### EnumField (todo)
+### EnumField
 
-Stores enums. Internally stored as an integer that maps to a specified value. Required
+Stores Enums. Internally stored as an integer that maps to a specified value. Required
 arguments:
 
-* `members=tuple` A mandatory tuple of tuples of values for the Enum.
+* `members=tuple` A mandatory tuple of ints to use as Enum members.
 
 Example:
 
@@ -392,14 +392,14 @@ MEMBERS = (
 EnumField(members=MEMBERS)
 ```
 
-Accepted type: `tuple[ints]`
+Accepted type: `int`
 
 
 ### UUIDField
 
 Stores UUID instances. Internally stored as 16 bytes.
 
-Accepted types: `uuid.UUID`
+Accepted type: `uuid.UUID`
 
 
 ## Tests
