@@ -24,6 +24,7 @@ class IntegerField(BaseField):
         '''
             No packing is required. Perform basic validation and return.
         '''
+        v = self.validate_packed(v)
         if not isinstance(v, self.data_type):
             raise ValidationError(f'pack() expected a value with type '
                                   f'{self.data_type}, got {type(v)}')
@@ -36,9 +37,6 @@ class IntegerField(BaseField):
 
     def unpack(self, v: int) -> int:
         '''
-            No unpacking is required. Perform basic validation and return.
+            No unpacking is required.
         '''
-        if not isinstance(v, self.data_type):
-            raise ValidationError(f'unpack() expected a value with type '
-                                  f'{self.data_type}, got {type(v)}')
-        return v
+        return self.validate_unpacked(v)
