@@ -307,7 +307,7 @@ Stores integers. Optional arguments:
 Accepted type: `int`
 
 
-### FloatField (todo)
+### FloatField
 
 Stores floats. Optional arguments:
 
