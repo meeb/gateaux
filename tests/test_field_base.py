@@ -32,3 +32,17 @@ class BaseFieldTestCase(unittest.TestCase):
             field.pack('test')
         with self.assertRaises(NotImplementedError):
             field.unpack('test')
+
+    def test_description(self) -> None:
+        field = gateaux.BaseField(
+            name='test name',
+            help_text='test help text',
+            null=False,
+            default='test default'
+        )
+        desc = field.description
+        self.assertEqual(desc['field'], 'BaseField')
+        self.assertEqual(desc['name'], 'test name')
+        self.assertEqual(desc['help_text'], 'test help text')
+        self.assertEqual(desc['null'], False)
+        self.assertEqual(desc['default'], 'test default')

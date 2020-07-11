@@ -134,3 +134,23 @@ class StructureTestCase(unittest.TestCase):
             key = (gateaux.BinaryField(),)
             value = (gateaux.BinaryField(),)
         test = ValidTestStructure(mock_connection)
+        # TODO: rest of test
+
+    def test_description(self) -> None:
+        mock_connection = MockFoundationDBConnection()
+        class ValidTestStructure(gateaux.Structure):
+            '''test doc string'''
+            directory = ('test', 'directory')
+            key = (gateaux.BinaryField(),)
+            value = (gateaux.BinaryField(),)
+        test = ValidTestStructure(mock_connection)
+        desc = test.description
+        self.assertEqual(desc['name'], 'ValidTestStructure')
+        self.assertEqual(desc['doc'], 'test doc string')
+        # Field description testing is performed in test_field_base, no need to dupe
+        self.assertIsInstance(desc['key'], list)
+        self.assertEqual(len(desc['key']), 1)
+        self.assertIsInstance(desc['key'][0], dict)
+        self.assertIsInstance(desc['value'], list)
+        self.assertEqual(len(desc['value']), 1)
+        self.assertIsInstance(desc['value'][0], dict)

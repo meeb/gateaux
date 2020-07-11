@@ -42,7 +42,21 @@ class BaseField:
             err = 'Unexpected keyword arguments passed to field: {}'
             raise ValueError(err.format(kwargs.keys()))
 
-    def pack(self, v:Any):
+    @property
+    def description(self) -> dict:
+        '''
+            Return a dict describing the field.
+        '''
+        return {
+            'field': self.__class__.__name__,
+            'type': self.data_type,
+            'name': self.name,
+            'help_text': self.help_text,
+            'null': self.null,
+            'default': self.default,
+        }
+
+    def pack(self, v:Any) -> Any:
         '''
             A field pack accepts one or more types and returns only one type. The
             return of pack() must be one of integer, string or bytes to be pack()'d
@@ -50,7 +64,7 @@ class BaseField:
         '''
         raise NotImplementedError('pack() must be defined')
 
-    def unpack(self, v:Any):
+    def unpack(self, v:Any) -> Any:
         '''
             An unpack accepts one data type and returns it or converts it to another
             type. The input to unpack() must be one of integer, string or bytes and

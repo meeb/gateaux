@@ -259,12 +259,13 @@ have the following interface:
 * `structure.unpack_value(tr, b'...')` unpacks FoundationDB bytes into a tuple and then
   validates the data against the defined value fields returning the appropriate data
   type for the field.
-* `structure.describe()` returns a `dict` describing the model, including any `name` or
-  `help` data set on each field. You can use this to programatically inspect a structure
-  in the future and is useful if you have many structures.
+* `structure.description` a property which returns a `dict` describing the model,
+  including the name of the structure and any doc string as well as lists of
+  descriptions for each field in the key and value. You can use this to programatically
+  inspect a structure in the future and is useful if you have many structures.
 
 All packing and unpacking methods require a FoundationDB transaction as the first
-argument.
+argument, denoted as `tr` above.
 
 
 ## Fields

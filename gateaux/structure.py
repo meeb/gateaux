@@ -53,8 +53,19 @@ class Structure:
         # If we reach here, all looks good
         return True
 
-    def describe(self) -> dict:
-        return {}
+    @property
+    def description(self) -> dict:
+        desc:dict = {
+            'name': self.__class__.__name__,
+            'doc': self.__doc__,
+            'key': [],
+            'value': [],
+        }
+        for field in self.key:
+            desc['key'].append(field.description)
+        for field in self.value:
+            desc['value'].append(field.description)
+        return desc
 
     def _pack(self, tr:Any, data_tuple: Tuple) -> bytes:
         return b''
