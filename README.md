@@ -333,11 +333,16 @@ Stores strings. Optional arguments:
 Accepted type: `str`
 
 
-### DateTimeField (todo)
+### DateTimeField
 
-Stores datetime instances. Internally stored as a UNIX timestamp and stored in UTC.
+Stores datetime instances. Internally stored as a UNIX timestamp as floats in UTC.
 
 Accepted type: `datetime.datetime`
+
+Input `datetime.datetime` will be normalised to UTC and returned in UTC when read. You
+should account for this in your application. Storing a `datetime.datetime` in any other
+timezone will convert it to UTC when read. If the provided `datetime.datetime` instance
+has no timezone info it will be assumed to be UTC.
 
 
 ### IPv4AddressField (todo)
