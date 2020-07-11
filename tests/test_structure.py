@@ -80,18 +80,18 @@ class StructureTestCase(unittest.TestCase):
             directory = ('test', b'directory')
             key = (gateaux.BinaryField(),)
             value = (gateaux.BinaryField(),)
-        with self.assertRaises(gateaux.errors.GateauxStructureError):
+        with self.assertRaises(gateaux.errors.StructureError):
             InvalidDirectoryTestStructure(mock_connection)
         class NoDirectoryTestStructure(gateaux.Structure):
             key = (gateaux.BinaryField(),)
             value = (gateaux.BinaryField(),)
-        with self.assertRaises(gateaux.errors.GateauxStructureError):
+        with self.assertRaises(gateaux.errors.StructureError):
             NoDirectoryTestStructure(mock_connection)
         class EmptyDirectoryTestStructure(gateaux.Structure):
             directory = ()
             key = (gateaux.BinaryField(),)
             value = (gateaux.BinaryField(),)
-        with self.assertRaises(gateaux.errors.GateauxStructureError):
+        with self.assertRaises(gateaux.errors.StructureError):
              EmptyDirectoryTestStructure(mock_connection)
         class ValidDirectoryTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
@@ -105,18 +105,18 @@ class StructureTestCase(unittest.TestCase):
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(), object())
             value = (gateaux.BinaryField(),)
-        with self.assertRaises(gateaux.errors.GateauxStructureError):
+        with self.assertRaises(gateaux.errors.StructureError):
             InvalidKeyTestStructure(mock_connection)
         class NoKeyTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             value = (gateaux.BinaryField(),)
-        with self.assertRaises(gateaux.errors.GateauxStructureError):
+        with self.assertRaises(gateaux.errors.StructureError):
             NoKeyTestStructure(mock_connection)
         class EmptyKeyTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             key = ()
             value = (gateaux.BinaryField(),)
-        with self.assertRaises(gateaux.errors.GateauxStructureError):
+        with self.assertRaises(gateaux.errors.StructureError):
             EmptyKeyTestStructure(mock_connection)
         class ValidKeyTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
@@ -130,18 +130,18 @@ class StructureTestCase(unittest.TestCase):
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(),)
             value = (gateaux.BinaryField(), object())
-        with self.assertRaises(gateaux.errors.GateauxStructureError):
+        with self.assertRaises(gateaux.errors.StructureError):
             InvalidValueTestStructure(mock_connection)
         class NoValueTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             value = (gateaux.BinaryField(),)
-        with self.assertRaises(gateaux.errors.GateauxStructureError):
+        with self.assertRaises(gateaux.errors.StructureError):
             NoValueTestStructure(mock_connection)
         class EmptyValueTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
             key = (gateaux.BinaryField(),)
             value = ()
-        with self.assertRaises(gateaux.errors.GateauxStructureError):
+        with self.assertRaises(gateaux.errors.StructureError):
             EmptyValueTestStructure(mock_connection)
         class ValidValueTestStructure(gateaux.Structure):
             directory = ('test', 'directory')
@@ -156,7 +156,8 @@ class StructureTestCase(unittest.TestCase):
             key = (gateaux.BinaryField(),)
             value = (gateaux.BinaryField(),)
         test = ValidTestStructure(mock_connection)
-        # TODO: rest of test
+        packed_key = test.pack_key((b'test',))
+        #print(packed_key)
 
     def test_description(self) -> None:
         mock_connection = MockFoundationDBConnection()

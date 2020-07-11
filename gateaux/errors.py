@@ -3,11 +3,11 @@ class GateauxError(Exception):
     pass
 
 
-class GateauxStructureError(GateauxError):
+class StructureError(GateauxError):
 
     pass
 
 
-class GateauxValidationError(GateauxError):
+class ValidationError(GateauxError):
 
     pass

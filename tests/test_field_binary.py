@@ -18,17 +18,17 @@ class BinaryFieldTestCase(unittest.TestCase):
         field = gateaux.BinaryField()
         field.pack(b'test')
         field = gateaux.BinaryField(max_length=3)
-        with self.assertRaises(gateaux.errors.GateauxValidationError):
+        with self.assertRaises(gateaux.errors.ValidationError):
             field.pack(b'test')
 
     def test_pack(self) -> None:
         field = gateaux.BinaryField()
-        with self.assertRaises(gateaux.errors.GateauxValidationError):
+        with self.assertRaises(gateaux.errors.ValidationError):
             field.pack('not bytes') # type: ignore
         self.assertEqual(field.pack(b'test'), b'test')
 
     def test_unpack(self) -> None:
         field = gateaux.BinaryField()
-        with self.assertRaises(gateaux.errors.GateauxValidationError):
+        with self.assertRaises(gateaux.errors.ValidationError):
             field.unpack('not bytes') # type: ignore
         self.assertEqual(field.unpack(b'test'), b'test')

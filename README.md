@@ -58,6 +58,7 @@ Python >= 3.6 is required due to the use of typing.
 
 ```python
 from datetime import datetime, timedelta
+from ipaddress import IPv4Address
 import fdb
 import gateaux
 
@@ -108,7 +109,6 @@ class EventLog(gateaux.Structure):
     )
 
 
-# All actions need to be in a transaction, first create an instance of our structure.
 # The FoundationDB connection passed here is used solely to open the specified
 # FoundationDB directory
 event_log = EventLog(db)
@@ -117,24 +117,24 @@ event_log = EventLog(db)
 # Use the structure
 @fdb.transactional
 def store_event(tr, ipv4, num_bytes, event_type):
-    key = event_log.pack_key(tr, (datetime.now(), ipv4))
-    value = event_log.pack_value(tr, (num_bytes, event_type))
+    key = event_log.pack_key((datetime.now(), ipv4))
+    value = event_log.pack_value((num_bytes, event_type))
     tr[key] = value
 
-store_event(db, '127.0.0.1', 12345, EventLog.TYPE_UPLOAD))
+store_event(db, IPv4Address('127.0.0.1'), 12345, EventLog.TYPE_UPLOAD))
 
 
 # All available methods at once
 @fdb.transactional
 def complete_example(tr):
-    key_tuple = (datetime.now(), '127.0.0.1')
+    key_tuple = (datetime.now(), IPv4Address('127.0.0.1'))
     value_tuple = (12345, EventLog.TYPE_UPLOAD)
     # Packing
-    packed_key = event_log.pack_key(tr, key_tuple)
-    packed_value = event_log.pack_value(tr, value_tuple)
+    packed_key = event_log.pack_key(key_tuple)
+    packed_value = event_log.pack_value(value_tuple)
     # Unpacking
-    unpacked_key = event_log.unpack_key(tr, packed_key)
-    unpacked_value = event_log.unpack_value(tr, packed_value)
+    unpacked_key = event_log.unpack_key(packed_key)
+    unpacked_value = event_log.unpack_value(packed_value)
     # After packing and unpacking they are the same
     assert(key_tuple == unpacked_key)
     assert(value_tuple == unpacked_value)
@@ -147,10 +147,13 @@ complete_example(db)
 def complete_example(tr):
     try:
         # Attempting to put a string into a DateTime field
-        key_tuple = ('wrong type', '127.0.0.1')
+        key_tuple = ('wrong type, not a datetime', IPv4Address('127.0.0.1'))
+        packed_key = event_log.pack_key(key_tuple)
     except gateaux.errors.GateauxValidationError as e:
         # ... handle the error
         print('validation error', e)
+
+complete_example(db)
 
 ```
 
@@ -248,25 +251,22 @@ some_structure_instance = SomeUserStructure(db)
 Structures have one required argument, the FoundationDB connection. Structure instances
 have the following interface:
 
-* `structure.pack_key(tr, (...))` validates a tuple of data against the defined key
+* `structure.pack_key((...))` validates a tuple of data against the defined key
   fields and returns bytes. The bytes are a FoundationDB packed tuple in the defined
   directory.
-* `structure.unpack_key(tr, b'...')` unpacks FoundationDB bytes into a tuple and then
+* `structure.unpack_key(b'...')` unpacks FoundationDB bytes into a tuple and then
   validates the data against the defined key fields returning the appropriate data type
   for the field.
-* `structure.pack_value(tr, (...))` validates a tuple of data against the defined value
+* `structure.pack_value((...))` validates a tuple of data against the defined value
   fields and returns bytes. The bytes are a FoundationDB packed tuple in the defined
   directory.
-* `structure.unpack_value(tr, b'...')` unpacks FoundationDB bytes into a tuple and then
+* `structure.unpack_value(b'...')` unpacks FoundationDB bytes into a tuple and then
   validates the data against the defined value fields returning the appropriate data
   type for the field.
 * `structure.description` a property which returns a `dict` describing the model,
   including the name of the structure and any doc string as well as lists of
   descriptions for each field in the key and value. You can use this to programatically
   inspect a structure in the future and is useful if you have many structures.
-
-All packing and unpacking methods require a FoundationDB transaction as the first
-argument, denoted as `tr` above.
 
 
 ## Fields

@@ -1,5 +1,5 @@
 from typing import Any, Tuple
-from .errors import GateauxStructureError
+from .errors import StructureError
 from .fields.base import BaseField
 
 
@@ -25,31 +25,31 @@ class Structure:
         me = self.__class__.__name__
         # Validate the directory attribute
         if not isinstance(self.directory, tuple):
-            raise GateauxStructureError(f'{me}.directory must be a tuple')
+            raise StructureError(f'{me}.directory must be a tuple')
         if not self.directory:
-            raise GateauxStructureError(f'{me}.directory must not be empty')
+            raise StructureError(f'{me}.directory must not be empty')
         for i, dir_part in enumerate(self.directory):
             if not isinstance(dir_part, str):
                 err = f'{me}.directory[{i}] is not a string, got: {type(dir_part)}'
-                raise GateauxStructureError(err)
+                raise StructureError(err)
         # Check the key is valid
         if not isinstance(self.key, tuple):
-            raise GateauxStructureError(f'{me}.key must be a tuple')
+            raise StructureError(f'{me}.key must be a tuple')
         if not self.key:
-            raise GateauxStructureError(f'{me}.key must not be empty')
+            raise StructureError(f'{me}.key must not be empty')
         for i, field in enumerate(self.key):
             if not isinstance(field, BaseField):
                 err = f'{me}.key[{i}] is not a field, got: {type(field)}'
-                raise GateauxStructureError(err)
+                raise StructureError(err)
         # Check the value is valid
         if not isinstance(self.value, tuple):
-            raise GateauxStructureError(f'{me}.value must be a tuple')
+            raise StructureError(f'{me}.value must be a tuple')
         if not self.value:
-            raise GateauxStructureError(f'{me}.value must not be empty')
+            raise StructureError(f'{me}.value must not be empty')
         for i, field in enumerate(self.value):
             if not isinstance(field, BaseField):
                 err = f'{me}.value[{i}] is not a field, got: {type(field)}'
-                raise GateauxStructureError(err)
+                raise StructureError(err)
         # If we reach here, all looks good
         return True
 
@@ -67,20 +67,20 @@ class Structure:
             desc['value'].append(field.description)
         return desc
 
-    def _pack(self, tr:Any, data_tuple: Tuple) -> bytes:
+    def _pack(self, data_tuple: Tuple) -> bytes:
         return b''
 
-    def _unpack(self, tr:Any, bytes: bytes) -> Tuple:
+    def _unpack(self, bytes: bytes) -> Tuple:
         return ()
 
-    def pack_key(self, tr:Any, key_tuple: Tuple) -> bytes:
+    def pack_key(self, key_tuple: Tuple) -> bytes:
         return b''
 
-    def pack_value(self, tr:Any, value_tuple: Tuple) -> bytes:
+    def pack_value(self, value_tuple: Tuple) -> bytes:
         return b''
 
-    def unpack_key(self, tr:Any, key_bytes: bytes) -> Tuple:
+    def unpack_key(self, key_bytes: bytes) -> Tuple:
         return ()
 
-    def unpack_value(self, tr:Any, value_bytes: bytes) -> Tuple:
+    def unpack_value(self, value_bytes: bytes) -> Tuple:
         return ()
