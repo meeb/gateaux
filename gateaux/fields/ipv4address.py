@@ -1,4 +1,4 @@
-from typing import Type, Union
+from typing import Type
 from ipaddress import IPv4Address
 from .base import BaseField
 from ..errors import ValidationError
