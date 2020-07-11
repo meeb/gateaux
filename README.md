@@ -34,8 +34,8 @@ relatively performant as all it does is shuffle native Python data types about.
 
 ## Installation
 
-`gateaux` itself has no dependancies, it is pure standard Python compatible. However, to
-be useful you first need to install the FoundationDB client from:
+`gateaux` itself only depends on `foundationdb` and `pytz`. You first need to install
+the FoundationDB client libraries from:
 
 https://www.foundationdb.org/download
 
