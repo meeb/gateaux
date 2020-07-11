@@ -293,7 +293,7 @@ Stores bytes. Optional arguments:
 Accepted type: `bytes`
 
 
-### `IntegerField` (todo)
+### `IntegerField`
 
 Stores integers. Optional arguments:
 
