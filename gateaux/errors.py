@@ -7,10 +7,17 @@ class GateauxError(Exception):
 
 class StructureError(GateauxError):
     '''
-        Raised when there is an error in the construct of a Structure, such as invalid
-        fields or no directory path.
+        Raised when there is an error in the construction of a Structure, such as
+        invalid fields or no directory path.
     '''
     pass
+
+
+class FieldError(GateauxError):
+    '''
+        Raised when there is an error in the construction of a Field, such as invalid
+        parameters passed to it.
+    '''
 
 
 class ValidationError(GateauxError):
