@@ -21,4 +21,4 @@ class BooleanFieldTestCase(unittest.TestCase):
         field = gateaux.BooleanField()
         with self.assertRaises(gateaux.errors.ValidationError):
             field.unpack('not boolean') # type: ignore
-        self.assertEqual(field.pack(True), True)
+        self.assertEqual(field.unpack(True), True)
