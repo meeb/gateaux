@@ -1,26 +1,26 @@
 from typing import Any, Tuple
-import fdb
-from fdb.impl import Database
-from fdb.directory_impl import DirectorySubspace
 from .errors import StructureError, ValidationError
 from .fields.base import BaseField
 
 
 class Structure:
 
-    directory: Tuple = ()
     key: Tuple = ()
     value: Tuple = ()
 
-    def __init__(self, connection: Database,
-                 directory: DirectorySubspace = None) -> None:
+    def __init__(self, subspace: Any = None) -> None:
         self.validate()
-        self.connection: Database = connection
-        if directory:
-            self.fdbdir: DirectorySubspace = directory
-        else:            
-            self.fdbdir: DirectorySubspace = fdb.directory.create_or_open(
-                self.connection, self.directory)
+        try:
+            if not callable(getattr(subspace, 'pack', None)):
+                raise StructureError('provided subspace must have a pack() method')
+        except AttributeError:
+            raise StructureError('provided subspace must have a pack() method')
+        try:
+            if not callable(getattr(subspace, 'unpack')):
+                raise StructureError('provided subspace must have a unpack() method')
+        except AttributeError:
+            raise StructureError('provided subspace must have a unpack() method')
+        self.subspace: Any = subspace
         self.num_key_fields = len(self.key)
         self.num_value_fields = len(self.value)
 
@@ -28,20 +28,10 @@ class Structure:
         '''
             Performs self-validation on a Structure such as validating required
             attributes are set:
-                * self.directory must be a tuple of strings
                 * self.key must be a tuple of gateaux Fields
-                * self.value must be a tuple of gateaux Fields
+                * self.value must be an empty tuple or a tuple of gateaux Fields
         '''
         me = self.__class__.__name__
-        # Validate the directory attribute
-        if not isinstance(self.directory, tuple):
-            raise StructureError(f'{me}.directory must be a tuple')
-        if not self.directory:
-            raise StructureError(f'{me}.directory must not be empty')
-        for i, dir_part in enumerate(self.directory):
-            if not isinstance(dir_part, str):
-                raise StructureError(f'{me}.directory[{i}] is not a string, '
-                                     f'got: {type(dir_part)}')
         # Check the key is valid
         if not isinstance(self.key, tuple):
             raise StructureError(f'{me}.key must be a tuple')
@@ -88,7 +78,7 @@ class Structure:
         field_packed: list = []
         for i, v in enumerate(data_tuple):
             field_packed.append(fields[i].pack(v))
-        return self.fdbdir.pack(tuple(field_packed))
+        return self.subspace.pack(tuple(field_packed))
 
     def _unpack(self, fields:Tuple, data_bytes: bytes) -> Tuple:
         '''
@@ -96,7 +86,7 @@ class Structure:
             passes each value through the .unpack methods of its matching field. Returns
             a tuple of data.
         '''
-        data_tuple = self.fdbdir.unpack(data_bytes)
+        data_tuple = self.subspace.unpack(data_bytes)
         if len(data_tuple) > len(fields):
             raise ValidationError(f'cannot _unpack(), data tuple has {len(data_tuple)} '
                                   f'elements, larger than the number of fields '

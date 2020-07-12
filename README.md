@@ -71,14 +71,12 @@ import gateaux
 # Connect to your FoundationDB cluster
 fdb.api_version(510)
 db = fdb.open()
+# Create or open a directory, subspace, or any other FoundationDB keyspace
+event_log_space = fdb.directory.create_or_open(('log', 'events'))
 
 
 # Define a data structure, an example event log in this case
 class EventLog(gateaux.Structure):
-
-    # Every data structure needs a directory as a tuple, this is a FoundationDB
-    # directory layer path
-    directory = ('log', 'events')
 
     # Enum members used in the value[1] field
     TYPE_UPLOAD = 0
@@ -115,9 +113,10 @@ class EventLog(gateaux.Structure):
     )
 
 
-# The FoundationDB connection passed here is used solely to open the specified
-# FoundationDB directory
-event_log = EventLog(db)
+# Create an EventLog instance using the defined keyspace as the only argument, this can
+# be the root FoundationDB connection (in which case EventLog will not have any prefix
+# for its keys) or a directory or a subspace
+event_log = EventLog(event_log_space)
 
 
 # Use the structure
@@ -172,8 +171,6 @@ Converted into using `gateaux` structures:
 ```python
 class TemperatureReading(gateaux.Structure):
 
-    directory = ('readings', 'temperatures')
-
     key = (
         gateaux.IntegerField(
             name='year',
@@ -190,7 +187,8 @@ class TemperatureReading(gateaux.Structure):
     )
 
 
-temp_reading = TemperatureReading(db)
+temp_reading_space = db['tempreadings']
+temp_reading = TemperatureReading(temp_reading_space)
 
 
 @fdb.transactional
@@ -212,12 +210,13 @@ def get_temp(tr, year, day):
 check carefully and verify the library is appropriate for your application before you
 use it:
 
-1. All structures are in their own FoundationDB directory using the directory layer
+1. All structures are in their own FoundationDB subspace, but it is up to you what
+   keyspace or subspace to use
 2. Key tuple members are variable, a key of 3 elements can contain 1, 2 or 3 values,
    this is to support prefixes and ranges for keys
 3. Value tuple members are fixed, a value of 3 elements must always contain 3 values
 3. Validation is strict, if you define a field as a StringField you cannot store bytes
-   in it etc. Types must match
+   in it etc.
 4. While possible to support multiple data types, such as cast int(1) to str('1') if an
    integer is provided to a StringField, by design typing is enforced and this will
    raise an exception
@@ -242,7 +241,6 @@ fdb.api_version(510)
 db = fdb.open()
 
 class SomeUserStructure(gateaux.Structure):
-    directory = ('some', 'directory')
     key = (gateaux.BinaryField(),)
     value = (gateaux.BinaryField(),)
 
