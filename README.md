@@ -22,6 +22,11 @@ a lot of code for not much of an interface, but it is designed to enforce struct
 types and therefore is over-engineered and over-tested by design so you don't have to
 worry about your data structures in your upstream applications which use `gateaux`.
 
+If you use `gateaux` your Python FoundationDB client code should look mostly the same,
+you just can't mistakenly pack the wrong type or make mistakes before writing data. Such
+additional validation is useful for larger codebases where you may be storing hundreds
+of `key=value` formats into FoundationDB and keeping track of them can be challenging.
+
 `gateaux` is a pure Python 3 (>=3.6) library which provides rich data type handling and
 validation on top of the usual `pack()` and `unpack()` methods and extends the
 `fdb.tuple` built-in layer. It is loosely modelled from the interfaces to relational
@@ -60,148 +65,11 @@ $ pip install gateaux
 Python >= 3.6 is required due to the use of typing.
 
 
-## Example
+## Examples
 
-```python
-from datetime import datetime, timedelta
-from ipaddress import IPv4Address
-import fdb
-import gateaux
-
-# Connect to your FoundationDB cluster
-fdb.api_version(510)
-db = fdb.open()
-# Create or open a directory, subspace, or any other FoundationDB keyspace
-event_log_space = fdb.directory.create_or_open(('log', 'events'))
-
-
-# Define a data structure, an example event log in this case
-class EventLog(gateaux.Structure):
-
-    # Enum members used in the value[1] field
-    TYPE_UPLOAD = 0
-    TYPE_DOWNLOAD = 1
-    TYPE_MEMBERS = (
-        TYPE_UPLOAD,
-        TYPE_DOWNLOAD,
-    )
-
-    # Keys are a tuple of fields
-    key = (
-        gateaux.DateTimeField(
-            name='date',
-            help_text='Date and time of the event',
-        ),
-        gateaux.IPv4AddressField(
-            name='ip address',
-            help_text='IPv4 address of the client that triggered the event',
-        )
-    )
-
-    # Values are also a tuple of fields
-    value = (
-        gateaux.IntegerField(
-            name='bytes'
-            min_value=0,
-            help_text='Bytes transferred during the event',
-        ),
-        gateaux.EnumField(
-            name='event type',
-            members=TYPE_MEMBERS,
-            help_text='Type of the event',
-        )
-    )
-
-
-# Create an EventLog instance using the defined keyspace as the only argument, this can
-# be the root FoundationDB connection (in which case EventLog will not have any prefix
-# for its keys) or a directory or a subspace
-event_log = EventLog(event_log_space)
-
-
-# Use the structure
-@fdb.transactional
-def store_event(tr, ipv4, num_bytes, event_type):
-    key = event_log.pack_key((datetime.now(), ipv4))
-    value = event_log.pack_value((num_bytes, event_type))
-    tr[key] = value
-
-store_event(db, IPv4Address('127.0.0.1'), 12345, EventLog.TYPE_UPLOAD))
-
-
-# All available methods at once
-@fdb.transactional
-def complete_example(tr):
-    key_tuple = (datetime.now(), IPv4Address('127.0.0.1'))
-    value_tuple = (12345, EventLog.TYPE_UPLOAD)
-    # Packing
-    packed_key = event_log.pack_key(key_tuple)
-    packed_value = event_log.pack_value(value_tuple)
-    # Unpacking
-    unpacked_key = event_log.unpack_key(packed_key)
-    unpacked_value = event_log.unpack_value(packed_value)
-    # After packing and unpacking they are the same
-    assert(key_tuple == unpacked_key)
-    assert(value_tuple == unpacked_value)
-
-complete_example(db)
-
-
-# Exception handling
-@fdb.transactional
-def complete_example(tr):
-    try:
-        # Attempting to put a string into a DateTime field
-        key_tuple = ('wrong type, not a datetime', IPv4Address('127.0.0.1'))
-        packed_key = event_log.pack_key(key_tuple)
-    except gateaux.errors.ValidationError as e:
-        # ... handle the error
-        print('validation error', e)
-
-complete_example(db)
-
-```
-
-## Example 2
-
-The FoundationDB example here:
-https://apple.github.io/foundationdb/data-modeling.html#data-modeling-tuples
-Converted into using `gateaux` structures:
-
-```python
-class TemperatureReading(gateaux.Structure):
-
-    key = (
-        gateaux.IntegerField(
-            name='year',
-        ),
-        gateaux.IntegerField(
-            name='day',
-        )
-    )
-
-    value = (
-        gateaux.IntegerField(
-            name='degrees',
-        )
-    )
-
-
-temp_reading_space = db['tempreadings']
-temp_reading = TemperatureReading(temp_reading_space)
-
-
-@fdb.transactional
-def set_temp(tr, year, day, degrees):
-    key = temp_reading.pack_key((year, day))
-    value = temp_reading.pack_value((degrees,))
-    tr[key] = value
-
-@fdb.transactional
-def get_temp(tr, year, day):
-    key = temp_reading.pack_key((year, day))
-    return tr[key]
-```
+* [General example usage](/examples/general.py)
+* [FoundationDB class scheduling example rebuilt with gateaux](/examples/class_scheduling.py)
+* [FoundationDB temperature readings example rebuilt with gateaux](/examples/temperature_readings.py)
 
 
 ## Enforced data format
