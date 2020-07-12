@@ -1,4 +1,4 @@
-from typing import Any, Tuple
+from typing import Any, Tuple, List, Dict
 from .errors import StructureError, ValidationError
 from .fields.base import BaseField
 
@@ -9,6 +9,10 @@ class Structure:
     value: Tuple = ()
 
     def __init__(self, subspace: Any = None) -> None:
+        self.key_fields_have_name: bool = True
+        self.value_fields_have_name: bool = True
+        self.key_field_names: List = []
+        self.value_field_names: List = []
         self.validate()
         try:
             if not callable(getattr(subspace, 'pack', None)):
@@ -41,6 +45,10 @@ class Structure:
             if not isinstance(field, BaseField):
                 raise StructureError(f'{me}.key[{i}] is not a field, '
                                      f'got: {type(field)}')
+            if field.name:
+                self.key_field_names.append(field.name)
+            else:
+                self.key_fields_have_name = False
         # Check the value is valid
         if not isinstance(self.value, tuple):
             raise StructureError(f'{me}.value must be a tuple')
@@ -48,6 +56,10 @@ class Structure:
             if not isinstance(field, BaseField):
                 raise StructureError(f'{me}.value[{i}] is not a field, '
                                      f'got: {type(field)}')
+            if field.name:
+                self.value_field_names.append(field.name)
+            else:
+                self.value_fields_have_name = False
         # If we reach here, all looks good
         return True
 
@@ -86,6 +98,8 @@ class Structure:
             passes each value through the .unpack methods of its matching field. Returns
             a tuple of data.
         '''
+        if not isinstance(data_bytes, bytes):
+            raise ValidationError(f'can only _unpack() bytes, got: {type(data_bytes)}')
         data_tuple = self.subspace.unpack(data_bytes)
         if len(data_tuple) > len(fields):
             raise ValidationError(f'cannot _unpack(), data tuple has {len(data_tuple)} '
@@ -138,3 +152,73 @@ class Structure:
             known by the defined value fields.
         '''
         return self._unpack(self.value, value_bytes)
+
+    def pack_key_dict(self, key_dict: Dict) -> bytes:
+        '''
+            Pack a directory using the names set for each key field. Internally this
+            maps the dict into a tuple using the key field names then passes it to the
+            standard pack_key() method.
+        '''
+        if not self.key_fields_have_name:
+            raise StructureError('All key fields must have a "name" set to use '
+                                 'pack_key_dict()')
+        if not isinstance(key_dict, dict):
+            raise ValidationError(f'pack_key_dict(...) must be passed a dict, '
+                                  f'got: {type(key_dict)}')
+        for k in key_dict.keys():
+            if k not in self.key_field_names:
+                raise ValidationError(f'Unknown key in dict: {k}')
+        keys = []
+        for name in self.key_field_names:
+            if name not in key_dict:
+                break
+            keys.append(key_dict[name])
+        return self.pack_key(tuple(keys))
+
+    def pack_value_dict(self, value_dict: Dict) -> bytes:
+        '''
+            Pack a directory using the names set for each value field. Internally this
+            maps the dict into a tuple using the value field names then passes it to the
+            standard pack_value() method.
+        '''
+        if not self.value_fields_have_name:
+            raise StructureError('All value fields must have a "name" set to use '
+                                 'pack_value_dict()')
+        if not isinstance(value_dict, dict):
+            raise ValidationError(f'pack_value_dict(...) must be passed a dict, '
+                                  f'got: {type(value_dict)}')
+        for k in value_dict.keys():
+            if k not in self.value_field_names:
+                raise ValidationError(f'Unknown key in dict: {k}')
+        values = []
+        for name in self.value_field_names:
+            values.append(value_dict.get(name, None))
+        return self.pack_value(tuple(values))
+
+    def unpack_key_dict(self, key_bytes: bytes) -> Dict:
+        '''
+            Unpacks bytes into a tuple, then maps the tuple to the field names into a
+            dict.
+        '''
+        if not self.key_fields_have_name:
+            raise StructureError('All key fields must have a "name" set to use '
+                                 'unpack_key_dict()')
+        key_tuple = self.unpack_key(key_bytes)
+        keys = {}
+        for i, v in enumerate(key_tuple):
+            keys[self.key[i].name] = v
+        return keys
+
+    def unpack_value_dict(self, value_bytes: bytes) -> Dict:
+        '''
+            Unpacks bytes into a tuple, then maps the tuple to the field names into a
+            dict.
+        '''
+        if not self.value_fields_have_name:
+            raise StructureError('All key fields must have a "name" set to use '
+                                 'unpack_value_dict()')
+        key_tuple = self.unpack_value(value_bytes)
+        values = {}
+        for i, v in enumerate(key_tuple):
+            values[self.value[i].name] = v
+        return values

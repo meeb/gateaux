@@ -105,18 +105,19 @@ Synopsis:
 import fdb
 import gateaux
 
-fdb.api_version(510)
+fdb.api_version(620)
 db = fdb.open()
 
 class SomeUserStructure(gateaux.Structure):
     key = (gateaux.BinaryField(),)
     value = (gateaux.BinaryField(),)
 
-some_structure_instance = SomeUserStructure(db)
+some_keyspace = fdb.Subspace(('some', 'subspace'))
+some_structure_instance = SomeUserStructure(some_keyspace)
 ```
 
-Structures have one required argument, the FoundationDB connection. Structure instances
-have the following interface:
+Structures have one required argument, a FoundationDB subspace. Structure instances
+have the following interface for tuples:
 
 * `structure.pack_key((...))` validates a tuple of data against the defined key
   fields and returns bytes. The bytes are a FoundationDB packed tuple in the defined
@@ -130,6 +131,25 @@ have the following interface:
 * `structure.unpack_value(b'...')` unpacks FoundationDB bytes into a tuple and then
   validates the data against the defined value fields returning the appropriate data
   type for the field.
+
+And the following interface for dicts:
+
+* `structure.pack_key_dict({...})` validates a dict of data against the defined key
+  fields and returns bytes. The bytes are a FoundationDB packed tuple in the defined
+  directory. To use key dicts you must have given all of your key fields a name.
+* `structure.unpack_key_dict(b'...')` unpacks FoundationDB bytes into a dict and then
+  validates the data against the defined key fields returning the appropriate data type
+  for the field. To use key dicts you must have given all of your key fields a name.
+* `structure.pack_value_dict((...))` validates a dict of data against the defined value
+  fields and returns bytes. The bytes are a FoundationDB packed tuple in the defined
+  directory. To use value dicts you must have given all of your value fields a name.
+* `structure.unpack_value_dict(b'...')` unpacks FoundationDB bytes into a dict and then
+  validates the data against the defined value fields returning the appropriate data
+  type for the field. To use value dicts you must have given all of your value fields a
+  name.
+
+And the following properties:
+
 * `structure.description` a property which returns a `dict` describing the model,
   including the name of the structure and any doc string as well as lists of
   descriptions for each field in the key and value. You can use this to programmatically

@@ -116,36 +116,126 @@ class StructureTestCase(unittest.TestCase):
         class ValidTestStructure(gateaux.Structure):
             key = (gateaux.BinaryField(), gateaux.BinaryField())
             value = (gateaux.BinaryField(), gateaux.BinaryField())
-        test = ValidTestStructure(mock_ss)
+        valid = ValidTestStructure(mock_ss)
         with self.assertRaises(gateaux.errors.ValidationError):
             # Too many
-            test._pack(test.key, (b'a', b'b', b'c'))
+            valid._pack(valid.key, (b'a', b'b', b'c'))
         with self.assertRaises(gateaux.errors.ValidationError):
             # Wrong type
-            test._pack(test.key, (b'a', 1))
-        packed = test._pack(test.key, (b'a', b'b'))
+            valid._pack(valid.key, (b'a', 1))
+        packed = valid._pack(valid.key, (b'a', b'b'))
         self.assertEqual(packed, b'\x00\x00\x01a\x00\x01b\x00')
         # Empty value
         class EmptyValueTestStructure(gateaux.Structure):
             key = (gateaux.BinaryField(), gateaux.BinaryField())
             value = ()
-        test = ValidTestStructure(mock_ss)
-        test._pack(test.value, ())
+        emptyvalue = ValidTestStructure(mock_ss)
+        emptyvalue._pack(valid.value, ())
 
     def test_unpack(self) -> None:
         mock_ss = MockFoundationSubspace()
         class ValidTestStructure(gateaux.Structure):
             key = (gateaux.BinaryField(), gateaux.BinaryField())
             value = (gateaux.BinaryField(), gateaux.BinaryField())
-        test = ValidTestStructure(mock_ss)
+        valid = ValidTestStructure(mock_ss)
         with self.assertRaises(gateaux.errors.ValidationError):
             # Too many
-            test._unpack(test.key, b'\x00\x00\x01a\x00\x01b\x00\x01c\x00')
+            valid._unpack(valid.key, b'\x00\x00\x01a\x00\x01b\x00\x01c\x00')
         with self.assertRaises(gateaux.errors.ValidationError):
             # Wrong type
-            test._unpack(test.key, b'\x00\x00\x01a\x00\x02b\x00')
-        unpacked = test._unpack(test.key, b'\x00\x00\x01a\x00\x01b\x00')
+            valid._unpack(valid.key, b'\x00\x00\x01a\x00\x02b\x00')
+        unpacked = valid._unpack(valid.key, b'\x00\x00\x01a\x00\x01b\x00')
         self.assertEqual(unpacked, (b'a', b'b'))
+
+    def test_pack_key_dict(self) -> None:
+        mock_ss = MockFoundationSubspace()
+        # Structure with no key field names
+        class NoNamesStructure(gateaux.Structure):
+            key = (gateaux.BinaryField(), gateaux.BinaryField())
+            value = (gateaux.BinaryField(), gateaux.BinaryField())
+        noname = NoNamesStructure(mock_ss)
+        with self.assertRaises(gateaux.errors.StructureError):
+            noname.pack_key_dict({'field1': b'test', 'field2': b'test'})
+        # Strucuture with key field names
+        class NamedStructure(gateaux.Structure):
+            key = (gateaux.BinaryField(name='field1'),
+                   gateaux.BinaryField(name='field2'))
+            value = (gateaux.BinaryField(), gateaux.BinaryField())
+        named = NamedStructure(mock_ss)
+        with self.assertRaises(gateaux.errors.ValidationError):
+            named.pack_key_dict((b'not a', b'dict')) # type: ignore
+        with self.assertRaises(gateaux.errors.ValidationError):
+            named.pack_key_dict({'field1': b'test', 'invalid': b'test'})
+        packed = named.pack_key_dict({'field1': b'test', 'field2': b'test'})
+        self.assertEqual(packed, b'\x00\x00\x01test\x00\x01test\x00')
+        packed = named.pack_key_dict({'field2': b'test', 'field1': b'test'})
+        self.assertEqual(packed, b'\x00\x00\x01test\x00\x01test\x00')
+
+    def test_unpack_key_dict(self) -> None:
+        mock_ss = MockFoundationSubspace()
+        # Structure with no key field names
+        class NoNamesStructure(gateaux.Structure):
+            key = (gateaux.BinaryField(), gateaux.BinaryField())
+            value = (gateaux.BinaryField(), gateaux.BinaryField())
+        noname = NoNamesStructure(mock_ss)
+        with self.assertRaises(gateaux.errors.StructureError):
+            noname.unpack_key_dict(b'\x00\x00\x01test\x00\x01test\x00')
+        # Strucuture with key field names
+        class NamedStructure(gateaux.Structure):
+            key = (gateaux.BinaryField(name='field1'),
+                   gateaux.BinaryField(name='field2'))
+            value = (gateaux.BinaryField(), gateaux.BinaryField())
+        named = NamedStructure(mock_ss)
+        with self.assertRaises(gateaux.errors.ValidationError):
+            named.unpack_key_dict('not bytes') # type: ignore
+        unpacked = named.unpack_key_dict(b'\x00\x00\x01test\x00\x01test\x00')
+        self.assertEqual(unpacked, {'field1': b'test', 'field2': b'test'})
+
+    def test_pack_value_dict(self) -> None:
+        mock_ss = MockFoundationSubspace()
+        # Structure with no value field names
+        class NoNamesStructure(gateaux.Structure):
+            key = (gateaux.BinaryField(), gateaux.BinaryField())
+            value = (gateaux.BinaryField(), gateaux.BinaryField())
+        noname = NoNamesStructure(mock_ss)
+        with self.assertRaises(gateaux.errors.StructureError):
+            noname.pack_value_dict({'field1': b'test', 'field2': b'test'})
+        # Strucuture with value field names
+        class NamedStructure(gateaux.Structure):
+            key = (gateaux.BinaryField(), gateaux.BinaryField())
+            value = (gateaux.BinaryField(name='value1'),
+                     gateaux.BinaryField(name='value2'))
+        named = NamedStructure(mock_ss)
+        with self.assertRaises(gateaux.errors.ValidationError):
+            named.pack_value_dict((b'not a', b'dict')) # type: ignore
+        with self.assertRaises(gateaux.errors.ValidationError):
+            named.pack_value_dict({'value1': b'test', 'invalid': b'test'})
+        with self.assertRaises(gateaux.errors.ValidationError):
+            named.pack_value_dict({'value1': b'test'})
+        packed = named.pack_value_dict({'value1': b'test1', 'value2': b'test2'})
+        self.assertEqual(packed, b'\x00\x00\x01test1\x00\x01test2\x00')
+        packed = named.pack_value_dict({'value2': b'test2', 'value1': b'test1'})
+        self.assertEqual(packed, b'\x00\x00\x01test1\x00\x01test2\x00')
+
+    def test_unpack_value_dict(self) -> None:
+        mock_ss = MockFoundationSubspace()
+        # Structure with no value field names
+        class NoNamesStructure(gateaux.Structure):
+            key = (gateaux.BinaryField(), gateaux.BinaryField())
+            value = (gateaux.BinaryField(), gateaux.BinaryField())
+        noname = NoNamesStructure(mock_ss)
+        with self.assertRaises(gateaux.errors.StructureError):
+            noname.unpack_value_dict(b'\x00\x00\x01test\x00\x01test\x00')
+        # Strucuture with value field names
+        class NamedStructure(gateaux.Structure):
+            key = (gateaux.BinaryField(), gateaux.BinaryField())
+            value = (gateaux.BinaryField(name='value1'),
+                     gateaux.BinaryField(name='value2'))
+        named = NamedStructure(mock_ss)
+        with self.assertRaises(gateaux.errors.ValidationError):
+            named.unpack_value_dict('not bytes') # type: ignore
+        unpacked = named.unpack_value_dict(b'\x00\x00\x01test1\x00\x01test2\x00')
+        self.assertEqual(unpacked, {'value1': b'test1', 'value2': b'test2'})
 
     def test_interface(self) -> None:
         mock_ss = MockFoundationSubspace()
