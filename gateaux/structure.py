@@ -54,8 +54,6 @@ class Structure:
         # Check the value is valid
         if not isinstance(self.value, tuple):
             raise StructureError(f'{me}.value must be a tuple')
-        if not self.value:
-            raise StructureError(f'{me}.value must not be empty')
         for i, field in enumerate(self.value):
             if not isinstance(field, BaseField):
                 raise StructureError(f'{me}.value[{i}] is not a field, '
