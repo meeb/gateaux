@@ -296,7 +296,7 @@ important data it has good coverage to make sure it's behaving as expected. You 
 it by cloning this repository then executing:
 
 ```bash
-$ ./run-tests.sh
+$ make test
 ```
 
 The tests perform type checking and require "mypy" from http://mypy-lang.org/ to be
