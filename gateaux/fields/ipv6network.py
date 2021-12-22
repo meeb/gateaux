@@ -8,7 +8,7 @@ class IPv6NetworkField(BaseField):
     '''
         A IPv4NetworkField() takes and returns ipaddress.IPv4Network instances data as
         bytes. It performs ipaddress.IPv4Network to bytes conversion. Internally,
-        these are stored as 5 bytes. The first 4 bytes are the packed IP address and the
+        these are stored as 17 bytes. The first 16 bytes are the packed IP address and the
         last byte is the prefix length.
     '''
 
